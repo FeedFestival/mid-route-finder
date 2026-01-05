@@ -1,0 +1,137 @@
+@use './assets/scss/primeng-overrides.scss';
+@import '~jsoneditor/dist/jsoneditor.min.css';
+
+/* You can add global styles to this file, and also import other style files */
+html,
+body {
+    margin: 0;
+    padding: 0;
+
+    height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.8rem;
+
+    background: url(./assets/images/Disco-Elysium.jpg) no-repeat center fixed;
+    -webkit-background-size: cover;
+    /* pour anciens Chrome et Safari */
+    background-size: cover;
+    /* version standardisée */
+}
+
+body app-root {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    width: 100%;
+}
+
+/* CAN (MUST) BE REMOVED ! Sample Global style */
+.container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    .title {
+        color: white;
+        margin: 0;
+        padding: 50px 20px;
+    }
+
+    a {
+        color: #fff !important;
+        text-transform: uppercase;
+        text-decoration: none;
+        background: #ed3330;
+        padding: 20px;
+        border-radius: 5px;
+        display: inline-block;
+        border: none;
+        transition: all 0.4s ease 0s;
+
+        &:hover {
+            background: #fff;
+            color: #ed3330 !important;
+            letter-spacing: 1px;
+            -webkit-box-shadow: 0px 5px 40px -10px rgba(0, 0, 0, 0.57);
+            -moz-box-shadow: 0px 5px 40px -10px rgba(0, 0, 0, 0.57);
+            box-shadow: 5px 40px -10px rgba(0, 0, 0, 0.57);
+            transition: all 0.4s ease 0s;
+        }
+    }
+}
+
+.p-hidden-space {
+    display: none !important;
+}
+
+//----------------------------------------------------------------------------------------------
+
+div.jsoneditor-tree {
+    background: #0f1216;
+}
+
+.jsoneditor-popover,
+.jsoneditor-schema-error,
+div.jsoneditor td,
+div.jsoneditor textarea,
+div.jsoneditor th,
+div.jsoneditor-field,
+div.jsoneditor-value,
+pre.jsoneditor-preview {
+    font-size: 11px;
+    color: #a0b1c8;
+}
+
+a.jsoneditor-value,
+div.jsoneditor-default,
+div.jsoneditor-field,
+div.jsoneditor-readonly,
+div.jsoneditor-value {
+    min-height: 11px;
+    line-height: 11px;
+}
+
+tr.jsoneditor-highlight,
+tr.jsoneditor-selected {
+    background-color: #311d2f;
+}
+
+div.jsoneditor-field.jsoneditor-highlight,
+div.jsoneditor-field[contenteditable='true']:focus,
+div.jsoneditor-field[contenteditable='true']:hover,
+div.jsoneditor-value.jsoneditor-highlight,
+div.jsoneditor-value[contenteditable='true']:focus,
+div.jsoneditor-value[contenteditable='true']:hover {
+    background-color: #232e5e;
+    border-color: #583286;
+    border-radius: 2px;
+}
+
+.jsoneditor-navigation-bar {
+    border-color: #120c15;
+    // color: grey;
+    background-color: #191d25;
+}
+
+.jsoneditor-menu {
+    background-color: #0e1725;
+    border-color: #121b29;
+}
+
+.jsoneditor {
+    border-color: #424a58;
+}
+
+.jsoneditor-frame {
+    background-color: #ffffff0f;
+}
+
+.jsoneditor-frame {
+    input {
+        height: 22px !important;
+    }
+}

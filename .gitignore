@@ -12,6 +12,18 @@
 /[Uu]ser[Ss]ettings/
 *.log
 
+
+/*/[Ll]ibrary/
+/*/[Tt]emp/
+/*/[Oo]bj/
+/*/[Bb]uild/
+/*/[Bb]uilds/
+/*/[Pp]ackages/
+/*/[Ll]ogs/
+/*/[Uu]ser[Ss]ettings/
+/*/[Dd]ist/
+/*/[Aa]ssets/TextMesh Pro/
+
 # By default unity supports Blender asset imports, *.blend1 blender files do not need to be commited to version control.
 *.blend1
 *.blend1.meta
@@ -97,3 +109,10 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Don't put Bakery online
+/**/Bakery/**/**.*
+/**/Assets/Editor/x64/Bakery/*
+
+/**/Plugins/Sirenix/**/**.*
+

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b29ddc2fc93df424084aab225ed40213, type: 3}
+  m_Name: ResourceLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::ResourceLibrary
+  LineRendererPrefab: {fileID: 3518423773977947519, guid: 3ca0c3483f8c9994b8df8beb0411b63e, type: 3}
+  RouteBetweenPrefab: {fileID: 5614245354345346284, guid: e3765fbbdb12b5044bff76387078fce7, type: 3}
+  WagonPlaceholderPrefab: {fileID: 7221452288196791348, guid: c66811ef3e858294190f4f4dfde12816, type: 3}
+  CityVisualizerPrefab: {fileID: 951936228704540066, guid: cbd0be0032e774c4eaa2ba5e89d82897, type: 3}
+  PlanePrefab: {fileID: 455046920375282191, guid: 46a5451dffc55174db868dacc64838de, type: 3}
+  defaultMaterial: {fileID: 2100000, guid: b917d920e187dff4caf573c9f3ac200e, type: 2}
+  Red: {fileID: 2100000, guid: 02d52a86b0891344791a9d98a3368143, type: 2}
+  Blue: {fileID: 2100000, guid: 78f565b5ad557b742b2340ec0e0cf584, type: 2}
+  Green: {fileID: 2100000, guid: f0d394e22915a034aa3e6103c82ebeac, type: 2}
+  Yellow: {fileID: 2100000, guid: b4bd92db23fed0541be56f064ca07147, type: 2}
+  Orange: {fileID: 2100000, guid: e3179e9673bc6fe4eb965213d7caf558, type: 2}
+  Pink: {fileID: 2100000, guid: 0d82c73a088196343acffb291bac3c38, type: 2}
+  Black: {fileID: 2100000, guid: 6e37b0993f1130548ad4dd153bef5ce3, type: 2}
+  White: {fileID: 2100000, guid: 2737de3b9de2e1c4e8aa4ed974da7b40, type: 2}

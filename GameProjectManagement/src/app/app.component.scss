@@ -1,0 +1,14 @@
+:host {
+
+    .navbar {
+        height: 32px;
+        background: #000000ad;
+        color: white;
+        //
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0 1rem;
+    }
+}
