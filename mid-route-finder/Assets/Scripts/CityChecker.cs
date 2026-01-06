@@ -13,7 +13,7 @@ public class CityChecker : MonoBehaviour {
     Transform _routesT;
 
     List<City> _cities;
-    List<RouteData> _routesBetween;
+    List<routeData> _routesBetween;
 
     void Awake() {
         clearData();
@@ -72,7 +72,7 @@ public class CityChecker : MonoBehaviour {
 
         float smallestDistance = ResourceLibrary._.WagonPlaceholderPrefab.transform.localScale.z;
 
-        foreach (RouteData routeData in _routesBetween) {
+        foreach (routeData routeData in _routesBetween) {
             var routeGo = Instantiate(ResourceLibrary._.RouteBetweenPrefab, Vector3.zero, Quaternion.identity,
                 _routesT);
             var routeBetween = routeGo.GetComponent<RouteBetween>();
@@ -83,7 +83,7 @@ public class CityChecker : MonoBehaviour {
 
             // TODO: make them neighbors
 
-            RouteSettings? routeSettings = tryGetRouteSettings(routeData.FromCityName, routeData.ToCityName);
+            routeSettings? routeSettings = tryGetRouteSettings(routeData.FromCityName, routeData.ToCityName);
 
             routeBetween.InitializeFromData(
                 routeData.Distance,
@@ -122,7 +122,7 @@ public class CityChecker : MonoBehaviour {
             var city = cityGo.GetComponent<City>();
             city.Init(childT.gameObject);
 
-            var cityRoutes = new List<RouteData>();
+            var cityRoutes = new List<routeData>();
 
             foreach (Transform otherChildT in _citiesT) {
                 if (childT.gameObject.name == otherChildT.gameObject.name) {
@@ -136,7 +136,7 @@ public class CityChecker : MonoBehaviour {
                 int b = Mathf.Max(city.ID, otherCity.id);
 
                 float dist = Vector3.Distance(childT.position, otherChildT.position);
-                var route = new RouteData(id, dist, city.Name, otherCity.name);
+                var route = new routeData(id, dist, city.Name, otherCity.name);
                 cityRoutes.Add(route);
 
                 if (usedRoutes.Contains((a, b)))
@@ -171,11 +171,11 @@ public class CityChecker : MonoBehaviour {
             var fromCity = _cities.Find(it => it.Name == requiredRoute.FromCityName);
             var toCity = _cities.Find(it => it.Name == requiredRoute.ToCityName);
             float dist = Vector3.Distance(fromCity.transform.position, toCity.transform.position);
-            _routesBetween.Add(new RouteData(id, dist, requiredRoute.FromCityName, requiredRoute.ToCityName));
+            _routesBetween.Add(new routeData(id, dist, requiredRoute.FromCityName, requiredRoute.ToCityName));
         }
     }
 
-    RouteSettings? tryGetRouteSettings(string fromName, string toName) {
+    routeSettings? tryGetRouteSettings(string fromName, string toName) {
         bool hasSettings = RouteConstants.ROUTES_SETTINGS.ContainsKey(fromName);
         if (!hasSettings) return null;
         hasSettings = RouteConstants.ROUTES_SETTINGS[fromName].ContainsKey(toName);

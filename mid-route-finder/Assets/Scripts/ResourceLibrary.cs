@@ -4,15 +4,15 @@ using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "ResourceLibrary", menuName = "Singletons/ResourceLibrary")]
 public class ResourceLibrary : ScriptableObject {
-    private static ResourceLibrary _instance;
+    private static ResourceLibrary instance;
 
     public static ResourceLibrary _ {
         get {
-            if (_instance == null) {
-                _instance = Resources.Load<ResourceLibrary>("ResourceLibrary");
+            if (instance == null) {
+                instance = Resources.Load<ResourceLibrary>("ResourceLibrary");
             }
 
-            return _instance;
+            return instance;
         }
     }
 
@@ -37,12 +37,12 @@ public class ResourceLibrary : ScriptableObject {
     public IReadOnlyDictionary<RouteColor, Material> ColorMaterials {
         get {
             if (_colorMaterials == null)
-                Initialize();
+                initialize();
             return _colorMaterials;
         }
     }
 
-    void Initialize() {
+    void initialize() {
         _colorMaterials = new Dictionary<RouteColor, Material> {
             { RouteColor.Red, Red },
             { RouteColor.Blue, Blue },

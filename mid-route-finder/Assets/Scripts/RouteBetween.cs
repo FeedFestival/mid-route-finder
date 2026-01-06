@@ -11,7 +11,7 @@ public class RouteBetween : MonoBehaviour {
         float distance,
         City fromCity,
         City toCity,
-        RouteSettings? routeSettings,
+        routeSettings? routeSettings,
         float smallestDistance
     ) {
         Distance = distance;
@@ -70,7 +70,7 @@ public class RouteBetween : MonoBehaviour {
         return go;
     }
 
-    int getWagonCount(RouteSettings? routeSettings, float smallestDistance) {
+    int getWagonCount(routeSettings? routeSettings, float smallestDistance) {
         int wagonCount = Mathf.Max(1, Mathf.FloorToInt(Distance / smallestDistance));
         if (routeSettings.HasValue && routeSettings.Value.EnforcedLength > 0) {
             wagonCount = routeSettings.Value.EnforcedLength;
@@ -94,13 +94,13 @@ public class RouteBetween : MonoBehaviour {
     }
 }
 
-public struct RouteData {
+public struct routeData {
     public readonly int ID;
     public readonly string FromCityName;
     public readonly float Distance;
     public readonly string ToCityName;
 
-    public RouteData(int id, float distance, string fromCityName, string toCityName) {
+    public routeData(int id, float distance, string fromCityName, string toCityName) {
         ID = id;
         Distance = distance;
         FromCityName = fromCityName;

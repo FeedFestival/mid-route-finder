@@ -61,7 +61,7 @@ public class Route : MonoBehaviour {
                enforcedPlaceholderSizeRatio.Value;
     }
 
-    public void ApplySettings(RouteSettings routeSettings, RouteColor? routeColor = null) {
+    public void ApplySettings(routeSettings routeSettings, RouteColor? routeColor = null) {
         if (!routeColor.HasValue) {
             routeColor = routeSettings.Color;
         }

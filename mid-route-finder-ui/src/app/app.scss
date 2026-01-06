@@ -1,0 +1,26 @@
+.test-container {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  height: 0;
+  width: 100%;
+
+  .child {
+    position: absolute;
+    width: 16%;
+    right: 0;
+    height: auto;
+    background-color: #3535355e;
+  }
+
+  .test-picker {
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    background-color: #3535355e;
+    height: 200px;
+  }
+}

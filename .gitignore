@@ -114,5 +114,12 @@ InitTestScene*.unity*
 /**/Bakery/**/**.*
 /**/Assets/Editor/x64/Bakery/*
 
+/**/Assets/Plugins/Demigiant/*
+/**/Assets/Plugins/Easy performant outline/*
+/**/Assets/Plugins/Crest/*
+
+/**/Assets/Packages/**/*
+
 /**/Plugins/Sirenix/**/**.*
 
+/mid-route-finder/dist_GPU/**/**.*

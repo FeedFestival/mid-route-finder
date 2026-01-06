@@ -27,66 +27,66 @@ public class RouteConstants : MonoBehaviour {
         }
     };
 
-    public static readonly List<RequiredRoute> REQUIRED_ROUTES = new() {
-        new RequiredRoute {
+    public static readonly List<requiredRoute> REQUIRED_ROUTES = new() {
+        new requiredRoute {
             FromCityName = CITY.CRAIOVA,
             ToCityName = CITY.ALEXANDRIA,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.ARAD,
             ToCityName = CITY.DEVA,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.ORADEA,
             ToCityName = CITY.DEVA,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.BRASOV,
             ToCityName = CITY.SIBIU,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.FOCSANI,
             ToCityName = CITY.SFANTU_GHEORGHE,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.GALATI,
             ToCityName = CITY.VASLUI,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.PIATRA_NEAMT,
             ToCityName = CITY.BISTRITA,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.CALARASI,
             ToCityName = CITY.GIURGIU,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.SIBIU,
             ToCityName = CITY.TARGU_JIU,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.BRASOV,
             ToCityName = CITY.RAMNICU_VALCEA,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.TARGU_JIU,
             ToCityName = CITY.RESITA,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.SUCEAVA,
             ToCityName = CITY.BISTRITA,
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.BISTRITA,
             ToCityName = CITY.MIERCUREA_CIUC
         },
-        new RequiredRoute {
+        new requiredRoute {
             FromCityName = CITY.CLUJ_NAPOCA,
             ToCityName = CITY.DEVA
         },
     };
 
-    public static readonly Dictionary<string, CitySettings> CITY_SETTINGS = new() {
+    public static readonly Dictionary<string, citySettings> CITY_SETTINGS = new() {
         { // 13
             CITY.GALATI, new() {
                 TextAlignmentOptions = TextAlignmentOptions.Top
@@ -114,7 +114,7 @@ public class RouteConstants : MonoBehaviour {
         }
     };
 
-    public static readonly Dictionary<string, Dictionary<string, RouteSettings>> ROUTES_SETTINGS = new() {
+    public static readonly Dictionary<string, Dictionary<string, routeSettings>> ROUTES_SETTINGS = new() {
         { // 0
             CITY.BUCURESTI, new() {
                 {
@@ -605,16 +605,16 @@ public enum RouteColor {
     White
 }
 
-public struct RequiredRoute {
+public struct requiredRoute {
     public string FromCityName;
     public string ToCityName;
 }
 
-public struct CitySettings {
+public struct citySettings {
     public TextAlignmentOptions TextAlignmentOptions;
 }
 
-public struct RouteSettings {
+public struct routeSettings {
     public bool TwoWay;
     public float? EnforcedPlaceholderSizeRatio;
     public int EnforcedLength;
