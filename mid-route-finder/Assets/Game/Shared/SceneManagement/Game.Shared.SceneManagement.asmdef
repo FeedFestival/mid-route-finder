@@ -1,0 +1,4 @@
+{
+	"name": "Game.Shared.SceneManagement",
+	"references":[ "GUID:4fbf0f86a48056e47a509841a228febd" ]
+}

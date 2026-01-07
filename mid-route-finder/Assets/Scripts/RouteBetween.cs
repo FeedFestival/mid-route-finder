@@ -1,3 +1,4 @@
+using Game.Shared.Interfaces;
 using UnityEngine;
 
 public class RouteBetween : MonoBehaviour {
@@ -5,7 +6,7 @@ public class RouteBetween : MonoBehaviour {
     internal float Distance;
     internal City ToCity;
 
-    GameObject _plane;
+    [SerializeField] GameObject _plane;
 
     public void InitializeFromData(
         float distance,
@@ -55,19 +56,23 @@ public class RouteBetween : MonoBehaviour {
             }
         }
 
-        _plane = createPlane(ResourceLibrary._.PlanePrefab, from, to, xScale);
+        positionPlane(ref _plane, from, to, xScale);
     }
 
-    GameObject createPlane(GameObject planePrefab, Vector3 from, Vector3 to, float xScale) {
+    void positionPlane(ref GameObject go, Vector3 from, Vector3 to, float xScale) {
         Vector3 dir = to - from;
-        var go = Instantiate(planePrefab, from, Quaternion.LookRotation(dir, Vector3.up), transform);
+        float dist = dir.magnitude;
+
+        go.transform.position = from;
+        go.transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
 
         Vector3 s = go.transform.localScale;
-        s.z = dir.magnitude;
+        s.z = dist;
         s.x = xScale;
         go.transform.localScale = s;
 
-        return go;
+        var focusTrigger = GetComponent<IFocusTrigger>();
+        (focusTrigger as RouteFocusTrigger)?.AlignAndScaleToFit(from, dir, go.transform.localScale.y, dist);
     }
 
     int getWagonCount(routeSettings? routeSettings, float smallestDistance) {

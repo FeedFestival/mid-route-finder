@@ -31,8 +31,6 @@ public class CameraOrbit : MonoBehaviour, ICameraOrbit {
 
     ICameraTarget _cameraTarget;
 
-    public bool AnalogControl { get; set; }
-
     public void Init(ICameraTarget cameraTarget) {
         _cameraTarget = cameraTarget;
         _cinemachineTargetYaw = _cameraTarget.Target.rotation.eulerAngles.y;
@@ -71,7 +69,7 @@ public class CameraOrbit : MonoBehaviour, ICameraOrbit {
             // if there is an input and camera position is not fixed
             if (_lookInput.sqrMagnitude >= _threshold && !LockCameraPosition) {
                 //Don't multiply mouse input by Time.deltaTime;
-                float deltaTimeMultiplier = !AnalogControl ? 1.0f : Time.deltaTime;
+                float deltaTimeMultiplier = 1.0f;
 
                 _cinemachineTargetYaw += _lookInput.x * deltaTimeMultiplier;
                 _cinemachineTargetPitch += _lookInput.y * deltaTimeMultiplier;
@@ -83,11 +81,8 @@ public class CameraOrbit : MonoBehaviour, ICameraOrbit {
         }
 
         // Cinemachine will follow this target
-        _cameraTarget.Target.rotation = Quaternion.Euler(
-            _cinemachineTargetPitch + CameraAngleOverride,
-            _cinemachineTargetYaw,
-            0.0f
-        );
+        _cameraTarget.Target.rotation = Quaternion.Euler(_cinemachineTargetPitch + CameraAngleOverride,
+            _cinemachineTargetYaw, 0.0f);
     }
 
     static float ClampAngle(float lfAngle, float lfMin, float lfMax) {

@@ -1,0 +1,22 @@
+{
+    "name": "Game.Shared.Core",
+    "rootNamespace": "",
+    "references": [
+        "GUID:d0b9bafe38c8ceb44a87948771d9cc01",
+        "GUID:4fbf0f86a48056e47a509841a228febd",
+        "GUID:38ea48fc0fc6e394b922c1be00beef66",
+        "GUID:f33f2b80f1b400c4681b48882e2c466c",
+        "GUID:bb3d11d849c633e4d8fc23614f1ce875",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:482f0aa12758aa74494c5b4c31adb820"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -21,6 +21,7 @@ public class ResourceLibrary : ScriptableObject {
     [SerializeField] internal GameObject WagonPlaceholderPrefab;
     [SerializeField] internal GameObject CityVisualizerPrefab;
     [SerializeField] internal GameObject PlanePrefab;
+    [SerializeField] internal GameObject WagonPrefab;
 
     [Header("Materials")] public Material defaultMaterial;
     public Material Red;
@@ -32,17 +33,32 @@ public class ResourceLibrary : ScriptableObject {
     public Material Black;
     public Material White;
 
-    private Dictionary<RouteColor, Material> _colorMaterials;
+    [Header("Materials - Wagon")] public Material BlueWagon;
+    public Material RedWagon;
+    public Material YellowWagon;
+    public Material BlackWagon;
+    public Material GreenWagon;
+
+    Dictionary<RouteColor, Material> _colorMaterials;
+    Dictionary<TeamColor, Material> _wagonMaterials;
 
     public IReadOnlyDictionary<RouteColor, Material> ColorMaterials {
         get {
             if (_colorMaterials == null)
-                initialize();
+                initializeColors();
             return _colorMaterials;
         }
     }
 
-    void initialize() {
+    public IReadOnlyDictionary<TeamColor, Material> WagonMaterials {
+        get {
+            if (_wagonMaterials == null)
+                initializeWagonMaterials();
+            return _wagonMaterials;
+        }
+    }
+
+    void initializeColors() {
         _colorMaterials = new Dictionary<RouteColor, Material> {
             { RouteColor.Red, Red },
             { RouteColor.Blue, Blue },
@@ -55,55 +71,19 @@ public class ResourceLibrary : ScriptableObject {
         };
     }
 
+    void initializeWagonMaterials() {
+        _wagonMaterials = new Dictionary<TeamColor, Material> {
+            { TeamColor.Blue, BlueWagon },
+            { TeamColor.Red, RedWagon },
+            { TeamColor.Yellow, YellowWagon },
+            { TeamColor.Black, BlackWagon },
+            { TeamColor.Green, GreenWagon },
+        };
+    }
+
 #if UNITY_EDITOR
     private void OnValidate() {
         _colorMaterials = null;
     }
 #endif
 }
-
-// using System;
-// using System.Collections.Generic;
-// using UnityEngine;
-//
-// public class ResourceLibrary : MonoBehaviour {
-//     public static ResourceLibrary _ { get; private set; }
-//
-//     [Header("Prefabs")] [SerializeField] internal LineRenderer _lineRendererPrefab;
-//     [SerializeField] internal GameObject _routeBetweenPrefab;
-//     [SerializeField] internal GameObject WagonPlaceholderPrefab;
-//     [SerializeField] internal GameObject _cityVisualizerPrefab;
-//
-//     [Header("Materials")] public Material defaultMaterial;
-//     public Material Red;
-//     public Material Blue;
-//     public Material Green;
-//     public Material Yellow;
-//     public Material Orange;
-//     public Material Pink;
-//     public Material Black;
-//     public Material White;
-//
-//     internal Dictionary<RouteColor, Material> ColorMaterials = new();
-//
-//     void Awake() {
-//         if (_ != null && _ != this) {
-//             Destroy(gameObject);
-//             return;
-//         }
-//
-//         _ = this;
-//         DontDestroyOnLoad(gameObject);
-//
-//         ColorMaterials.Add(RouteColor.Red, Red);
-//         ColorMaterials.Add(RouteColor.Blue, Blue);
-//         ColorMaterials.Add(RouteColor.Green, Green);
-//         ColorMaterials.Add(RouteColor.Yellow, Yellow);
-//         ColorMaterials.Add(RouteColor.Orange, Orange);
-//         ColorMaterials.Add(RouteColor.Pink, Pink);
-//         ColorMaterials.Add(RouteColor.Black, Black);
-//         ColorMaterials.Add(RouteColor.White, White);
-//     }
-//
-//     void Start() { }
-// }
