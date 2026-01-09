@@ -2,11 +2,14 @@ using Game.Shared.Interfaces;
 using UnityEngine;
 
 public class RouteBetween : MonoBehaviour {
-    internal City FromCity;
-    internal float Distance;
-    internal City ToCity;
+    internal int RouteCost;
+    internal SpatialData[] PlaceholderPositions;
 
     [SerializeField] GameObject _plane;
+
+    float _distance;
+    City FromCity;
+    City ToCity;
 
     public void InitializeFromData(
         float distance,
@@ -15,12 +18,12 @@ public class RouteBetween : MonoBehaviour {
         routeSettings? routeSettings,
         float smallestDistance
     ) {
-        Distance = distance;
+        _distance = distance;
         FromCity = fromCity;
         ToCity = toCity;
 
-        int wagonCount = getWagonCount(routeSettings, smallestDistance);
-        gameObject.name = $"Route ({wagonCount}) {FromCity.ID}. {FromCity.Name} -> {ToCity.Name}";
+        RouteCost = getWagonCount(routeSettings, smallestDistance);
+        gameObject.name = $"Route ({RouteCost}) {FromCity.ID}. {FromCity.Name} -> {ToCity.Name}";
 
         Vector3 from = FromCity.transform.position;
         Vector3 to = ToCity.transform.position;
@@ -36,7 +39,7 @@ public class RouteBetween : MonoBehaviour {
         routeGo.transform.rotation = Quaternion.LookRotation(dir);
 
         var route = routeGo.AddComponent<Route>();
-        route.Init(wagonCount, from, to, routeSettings?.EnforcedPlaceholderSizeRatio);
+        route.Init(RouteCost, from, to, routeSettings?.EnforcedPlaceholderSizeRatio);
 
         if (routeSettings.HasValue) {
             var settings = routeSettings.Value;
@@ -56,7 +59,14 @@ public class RouteBetween : MonoBehaviour {
             }
         }
 
+        PlaceholderPositions = route.GetPlaceholderPositions();
+
         positionPlane(ref _plane, from, to, xScale);
+    }
+
+    public void DisableInteractions() {
+        var focusTrigger = gameObject.GetComponent<IFocusTrigger>();
+        focusTrigger?.Disable();
     }
 
     void positionPlane(ref GameObject go, Vector3 from, Vector3 to, float xScale) {
@@ -76,7 +86,7 @@ public class RouteBetween : MonoBehaviour {
     }
 
     int getWagonCount(routeSettings? routeSettings, float smallestDistance) {
-        int wagonCount = Mathf.Max(1, Mathf.FloorToInt(Distance / smallestDistance));
+        int wagonCount = Mathf.Max(1, Mathf.FloorToInt(_distance / smallestDistance));
         if (routeSettings.HasValue && routeSettings.Value.EnforcedLength > 0) {
             wagonCount = routeSettings.Value.EnforcedLength;
         }
@@ -86,7 +96,7 @@ public class RouteBetween : MonoBehaviour {
 
     public override string ToString() {
         return $@"{{
-        ""distance"": {Distance},
+        ""distance"": {_distance},
         ""fromCity"": {{
             ""id"": {FromCity.ID},
             ""name"": ""{FromCity.Name}""

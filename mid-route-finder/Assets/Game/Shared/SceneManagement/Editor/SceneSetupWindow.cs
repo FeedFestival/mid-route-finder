@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using Game.Shared.Constants.Scene;
 using UnityEngine;
@@ -83,3 +84,4 @@ public class SceneSetupWindow : EditorWindow {
 }
 
 }
+#endif

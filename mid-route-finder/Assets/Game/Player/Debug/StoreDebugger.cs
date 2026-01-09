@@ -1,6 +1,7 @@
 using Game.Shared.Constants.Store;
 using Game.Shared.Core.Store;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Game.Player.Debug {
 
@@ -9,8 +10,8 @@ public class StoreDebugger : MonoBehaviour {
     public Gameplay Gameplay;
     public UIScreen UIScreen;
 
-    public int PreviousFocusedTriggerID;
-    public int FocusedTriggerID;
+    public int FocusedInstanceID;
+    public string FocusedID;
 
     // Update is called once per frame
     void LateUpdate() {
@@ -18,8 +19,9 @@ public class StoreDebugger : MonoBehaviour {
         GamePhase = state.gamePhase;
         Gameplay = state.gameplay;
         UIScreen = state.uiScreen;
-        PreviousFocusedTriggerID = state.previousFocusedTriggerID;
-        FocusedTriggerID = state.focusedTriggerID;
+
+        FocusedInstanceID = state.focusedInstanceID;
+        FocusedID = state.focusedID.ToString();
     }
 }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 public class Route : MonoBehaviour {
@@ -49,6 +50,10 @@ public class Route : MonoBehaviour {
             scale.z = segmentLength;
             tr.localScale = scale;
         }
+    }
+
+    public SpatialData[] GetPlaceholderPositions() {
+        return _placeholders.Select(it => new SpatialData(it.transform.position, it.transform.rotation)).ToArray();
     }
 
     static float getSegmentLength(int wagonsCount, Vector3 from, Vector3 to, float? enforcedPlaceholderSizeRatio) {

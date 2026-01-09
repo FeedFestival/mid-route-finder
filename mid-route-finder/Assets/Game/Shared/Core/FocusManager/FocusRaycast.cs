@@ -11,6 +11,8 @@ public class FocusRaycast : MonoBehaviour {
     [SerializeField]
     float _checkRange = 5f;
 
+    int _lastFocusedInstanceId = -1;
+
     public void LookForFocusable(Vector2 mousePosition, ref Camera camera) {
         if (!camera) {
             Debug.LogError("Camera not found");
@@ -27,17 +29,21 @@ public class FocusRaycast : MonoBehaviour {
     }
 
     void onHit(RaycastHit hit) {
-        // var entityId = hit.transform.GetEntityId();
         var instanceId = hit.transform.GetInstanceID();
+        if (instanceId == _lastFocusedInstanceId)
+            return;
+        _lastFocusedInstanceId = instanceId;
 
-        Store2.SetFocusedTriggerID(instanceId);
+        Store2.SetFocusedInstanceID(instanceId);
 
         var focusHitProxy = hit.transform.GetComponent<IFocusHitProxy>();
-        focusHitProxy?.OnHit(instanceId);
+        focusHitProxy?.OnHit();
     }
 
     void onMiss() {
-        Store2.SetFocusedTriggerID(-1);
+        _lastFocusedInstanceId = -1;
+        Store2.SetFocusedInstanceID(-1);
+        Store2.SetFocusedID(0);
     }
 }
 

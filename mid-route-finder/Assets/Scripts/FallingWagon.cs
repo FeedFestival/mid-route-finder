@@ -3,14 +3,16 @@ using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+// TODO: Check if it makes sense to extend the Wagon for this WagonRegidbody
+// TODO: Rename to FallingWagon -> since that's his purpose
 public class WagonRigidbody : MonoBehaviour {
     [SerializeField] Renderer _cubeRenderer;
     [SerializeField] GameObject _boxCollider;
     Rigidbody _rb;
 
     bool _hasTouchedFloor;
-    Action<Wagon> _wagonReady;
-    Wagon _wagon;
+    Action<WagonRigidbody> _wagonReady;
+    internal TeamColor TeamColor;
 
     void Awake() {
         _rb = GetComponent<Rigidbody>();
@@ -19,11 +21,9 @@ public class WagonRigidbody : MonoBehaviour {
         }
     }
 
-    public void Init(TeamColor teamColor, Action<Wagon> wagonReady) {
+    public void Init(TeamColor teamColor, Action<WagonRigidbody> wagonReady) {
+        TeamColor = teamColor;
         _wagonReady = wagonReady;
-        _wagon = gameObject.AddComponent<Wagon>();
-        _wagon.Init(teamColor);
-
         _cubeRenderer.material = ResourceLibrary._.WagonMaterials[teamColor];
     }
 
@@ -33,7 +33,7 @@ public class WagonRigidbody : MonoBehaviour {
 
         _hasTouchedFloor = true;
 
-        float randomDelay = Random.Range(8f, 12f);
+        float randomDelay = Random.Range(6f, 8f);
         StartCoroutine(disablePhysicsAfterDelay(randomDelay));
     }
 
@@ -43,8 +43,8 @@ public class WagonRigidbody : MonoBehaviour {
 
         yield return new WaitForSeconds(minDelay);
 
-        const float velocityThreshold = 0.001f;
-        const float angularThreshold = 0.001f;
+        const float velocityThreshold = 0.01f;
+        const float angularThreshold = 0.01f;
         const float checkInterval = 0.18f;
 
         while (_rb.linearVelocity.sqrMagnitude > velocityThreshold ||
@@ -57,15 +57,6 @@ public class WagonRigidbody : MonoBehaviour {
         // _rb.angularVelocity = Vector3.zero;
         // _rb.isKinematic = true;
 
-        _wagonReady?.Invoke(_wagon);
-    }
-
-    public void Remove() {
-        if (_rb != null) {
-            Destroy(_rb);
-        }
-
-        if (_boxCollider != null)
-            Destroy(_boxCollider);
+        _wagonReady?.Invoke(this);
     }
 }

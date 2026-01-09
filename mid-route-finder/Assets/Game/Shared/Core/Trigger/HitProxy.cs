@@ -5,16 +5,18 @@ using UnityEngine;
 namespace Game.Shared.Core {
 
 public class HitProxy : MonoBehaviour, IFocusHitProxy {
-    Action<int> _onHit;
+    Action _onHit;
 
     public Transform t => transform;
 
-    public void Init(Action<int> onHit) {
+    public int Init(Action onHit) {
         _onHit = onHit;
+
+        return transform.GetInstanceID();
     }
 
-    public void OnHit(int instanceId) {
-        _onHit.Invoke(instanceId);
+    public void OnHit() {
+        _onHit.Invoke();
     }
 }
 

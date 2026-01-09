@@ -1,6 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using Game.Shared.Constants.Store;
+using Game.Shared.Core.Player_Input;
+using Game.Shared.Core.Store;
+using Game.Shared.Interfaces.EntitySystem;
+using R3;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -14,6 +18,12 @@ public class CityChecker : MonoBehaviour {
 
     List<City> _cities;
     List<routeData> _routesBetween;
+
+    Dictionary<ulong, RouteBetween> _routes;
+
+    public Dictionary<ulong, RouteBetween> GetRoutesBetween() {
+        return _routes;
+    }
 
     void Awake() {
         clearData();
@@ -31,6 +41,7 @@ public class CityChecker : MonoBehaviour {
     void clearData() {
         _cities = null;
         _routesBetween = null;
+        _routes = null;
 
         if (Application.isPlaying) {
             if (_cityVisualizerT != null)
@@ -70,6 +81,7 @@ public class CityChecker : MonoBehaviour {
         if (_routesT == null)
             _routesT = new GameObject("_routesT").transform;
 
+        _routes = new();
         float smallestDistance = ResourceLibrary._.WagonPlaceholderPrefab.transform.localScale.z;
 
         foreach (routeData routeData in _routesBetween) {
@@ -92,6 +104,8 @@ public class CityChecker : MonoBehaviour {
                 routeSettings,
                 smallestDistance
             );
+
+            _routes.Add(routeBetween.GetComponent<IEntityId>().ID, routeBetween);
         }
     }
 

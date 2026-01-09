@@ -1,15 +1,20 @@
 using UnityEngine;
 
 public class Wagon : MonoBehaviour {
-    public TeamColor TeamColor;
+    [SerializeField] Renderer _cubeRenderer;
 
-    public void Init(TeamColor teamColor) {
-        TeamColor = teamColor;
+    WagonRigidbody _wagonRb;
+
+    public void Init(WagonRigidbody wagonRb) {
+        _wagonRb = wagonRb;
+
+        _cubeRenderer.material = ResourceLibrary._.WagonMaterials[wagonRb.TeamColor];
     }
 
-    public void RemoveRigidbody() {
-        var wagonRigidbody = GetComponent<WagonRigidbody>();
-        wagonRigidbody.Remove();
-        Destroy(wagonRigidbody);
+    public void Place() {
+        transform.position = _wagonRb.transform.position;
+        transform.rotation = _wagonRb.transform.rotation;
+
+        Wagon.Destroy(_wagonRb.gameObject);
     }
 }

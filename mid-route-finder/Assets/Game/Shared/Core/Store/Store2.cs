@@ -25,9 +25,12 @@ public static class Store2 {
         State.__uIScreen.OnNext(uiScreen);
     }
 
-    public static void SetFocusedTriggerID(int focusedTriggerID) {
-        State.setPreviousFocusedTriggerID(State.FocusedTriggerID.CurrentValue);
-        State.__focusedTriggerID.OnNext(focusedTriggerID);
+    public static void SetFocusedID(ulong focusedID) {
+        State.__focusedID.OnNext(focusedID);
+    }
+
+    public static void SetFocusedInstanceID(int instanceID) {
+        State.__focusedInstanceID.OnNext(instanceID);
     }
 
     public static void Cleanup() {
@@ -40,21 +43,21 @@ public class StateNow {
     public readonly GamePhase gamePhase;
     public readonly Gameplay gameplay;
     public readonly UIScreen uiScreen;
-    public readonly int previousFocusedTriggerID;
-    public readonly int focusedTriggerID;
+    public readonly ulong focusedID;
+    public readonly int focusedInstanceID;
 
     public StateNow(
         GamePhase gamePhase,
         Gameplay gameplay,
         UIScreen uiScreen,
-        int previousFocusedTriggerID,
-        int focusedTriggerID
+        ulong focusedID,
+        int focusedInstanceID
     ) {
         this.gamePhase = gamePhase;
         this.gameplay = gameplay;
         this.uiScreen = uiScreen;
-        this.previousFocusedTriggerID = previousFocusedTriggerID;
-        this.focusedTriggerID = focusedTriggerID;
+        this.focusedID = focusedID;
+        this.focusedInstanceID = focusedInstanceID;
     }
 }
 
@@ -66,9 +69,11 @@ public class StoreState2 {
     public ReadOnlyReactiveProperty<UIScreen> UIScreen => __uIScreen;
     internal ReactiveProperty<UIScreen> __uIScreen { get; }
 
-    public int PreviousFocusedTriggerID { get; private set; }
-    public ReadOnlyReactiveProperty<int> FocusedTriggerID => __focusedTriggerID;
-    internal ReactiveProperty<int> __focusedTriggerID { get; }
+    public ReadOnlyReactiveProperty<ulong> FocusedID => __focusedID;
+    internal ReactiveProperty<ulong> __focusedID { get; }
+
+    public ReadOnlyReactiveProperty<int> FocusedInstanceID => __focusedInstanceID;
+    internal ReactiveProperty<int> __focusedInstanceID { get; }
 
     public Gameplay PreviousGameplay => __previousGameplay;
     internal Gameplay __previousGameplay = Constants.Store.Gameplay.Loading;
@@ -81,12 +86,9 @@ public class StoreState2 {
         __gamePhase = new(_gamePhase);
         __gameplay = new(_gameplay);
         __uIScreen = new(_uiScreen);
-        PreviousFocusedTriggerID = -1;
-        __focusedTriggerID = new(-1);
-    }
 
-    internal void setPreviousFocusedTriggerID(int previousFocusedTriggerID) {
-        PreviousFocusedTriggerID = previousFocusedTriggerID;
+        __focusedID = new(0);
+        __focusedInstanceID = new(-1);
     }
 
     public StateNow Now() {
@@ -94,8 +96,8 @@ public class StoreState2 {
             GamePhase.CurrentValue,
             Gameplay.CurrentValue,
             UIScreen.CurrentValue,
-            PreviousFocusedTriggerID,
-            FocusedTriggerID.CurrentValue
+            FocusedID.CurrentValue,
+            FocusedInstanceID.CurrentValue
         );
     }
 

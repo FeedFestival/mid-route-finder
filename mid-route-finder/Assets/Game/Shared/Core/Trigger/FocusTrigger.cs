@@ -4,16 +4,27 @@ using EPOOutline;
 using Game.Shared.Core.Store;
 using Game.Shared.Interfaces;
 using Game.Shared.Interfaces.Core;
+using Game.Shared.Interfaces.EntitySystem;
 using R3;
 using UnityEngine;
 
 namespace Game.Shared.Core {
 
 public class FocusTrigger : MonoBehaviour, IFocusTrigger {
-    int _instanceId;
+    HashSet<int> _instanceIds;
     IDisposable _focusChangeListenerRef;
     Outlinable _outlinable;
     protected HashSet<IFocusHitProxy> HitProxyList;
+
+    bool _disabled;
+
+    public void Disable() {
+        _disabled = true;
+
+        foreach (IFocusHitProxy focusHitProxy in HitProxyList) {
+            focusHitProxy.t.gameObject.SetActive(false);
+        }
+    }
 
     void Awake() {
         _outlinable = GetComponent<Outlinable>();
@@ -36,8 +47,10 @@ public class FocusTrigger : MonoBehaviour, IFocusTrigger {
             return;
         }
 
+        _instanceIds = new HashSet<int>();
         foreach (IFocusHitProxy hitProxy in HitProxyList) {
-            hitProxy.Init(onHit);
+            int instanceId = hitProxy.Init(onHit);
+            _instanceIds.Add(instanceId);
         }
     }
 
@@ -51,16 +64,20 @@ public class FocusTrigger : MonoBehaviour, IFocusTrigger {
         }
     }
 
-    void onHit(int instanceId) {
+    void onHit() {
+        if (_outlinable.enabled || _disabled) return;
+
+        var id = gameObject.GetComponent<IEntityId>().ID;
+        Store2.SetFocusedID(id);
+
         _outlinable.enabled = true;
-        _instanceId = instanceId;
-        _focusChangeListenerRef = Store2.State.FocusedTriggerID.Subscribe(onFocusChange);
+        _focusChangeListenerRef = Store2.State.FocusedInstanceID.DistinctUntilChanged().Subscribe(onFocusChange);
     }
 
-    void onFocusChange(int focusedTriggerId) {
-        if (focusedTriggerId != _instanceId)
-            _outlinable.enabled = false;
+    void onFocusChange(int instanceId) {
+        if (_instanceIds.Contains(instanceId)) return;
 
+        _outlinable.enabled = false;
         _focusChangeListenerRef?.Dispose();
     }
 }

@@ -17,7 +17,8 @@ MonoBehaviour:
   WagonPlaceholderPrefab: {fileID: 7221452288196791348, guid: c66811ef3e858294190f4f4dfde12816, type: 3}
   CityVisualizerPrefab: {fileID: 951936228704540066, guid: cbd0be0032e774c4eaa2ba5e89d82897, type: 3}
   PlanePrefab: {fileID: 455046920375282191, guid: 46a5451dffc55174db868dacc64838de, type: 3}
-  WagonPrefab: {fileID: 1125216814804167065, guid: cdb7aee3716856b4daf3550bd4a4e6dd, type: 3}
+  WagonRigidbodyPrefab: {fileID: 1125216814804167065, guid: cdb7aee3716856b4daf3550bd4a4e6dd, type: 3}
+  WagonPrefab: {fileID: 3533538652519569050, guid: 6be85b6f9b803154e93a906d8277fe56, type: 3}
   defaultMaterial: {fileID: 2100000, guid: b917d920e187dff4caf573c9f3ac200e, type: 2}
   Red: {fileID: 2100000, guid: 02d52a86b0891344791a9d98a3368143, type: 2}
   Blue: {fileID: 2100000, guid: 78f565b5ad557b742b2340ec0e0cf584, type: 2}

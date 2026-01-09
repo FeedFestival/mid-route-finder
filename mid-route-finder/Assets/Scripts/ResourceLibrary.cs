@@ -21,6 +21,7 @@ public class ResourceLibrary : ScriptableObject {
     [SerializeField] internal GameObject WagonPlaceholderPrefab;
     [SerializeField] internal GameObject CityVisualizerPrefab;
     [SerializeField] internal GameObject PlanePrefab;
+    [SerializeField] internal GameObject WagonRigidbodyPrefab;
     [SerializeField] internal GameObject WagonPrefab;
 
     [Header("Materials")] public Material defaultMaterial;
