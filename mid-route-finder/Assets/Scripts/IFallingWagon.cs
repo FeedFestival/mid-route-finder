@@ -1,7 +1,5 @@
-﻿namespace DefaultNamespace {
+﻿public interface IFallingWagon {
+    TeamColor TeamColor { get; }
 
-public interface IFallingWagon {
-    
-}
-
+    SpatialData SpatialData { get; }
 }

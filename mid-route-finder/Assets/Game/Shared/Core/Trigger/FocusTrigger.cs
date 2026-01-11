@@ -18,6 +18,14 @@ public class FocusTrigger : MonoBehaviour, IFocusTrigger {
 
     bool _disabled;
 
+    public void Enable() {
+        _disabled = false;
+
+        foreach (IFocusHitProxy focusHitProxy in HitProxyList) {
+            focusHitProxy.t.gameObject.SetActive(true);
+        }
+    }
+
     public void Disable() {
         _disabled = true;
 

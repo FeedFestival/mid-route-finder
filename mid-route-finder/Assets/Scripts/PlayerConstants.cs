@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 public enum TeamColor {
@@ -9,6 +10,7 @@ public enum TeamColor {
     Green
 }
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 public struct SpatialData {
     public Vector3 position;
     public Quaternion rotation;
@@ -20,9 +22,11 @@ public struct SpatialData {
 }
 
 public static class PlayerConstants {
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public static readonly TeamColor[] TEAM_COLORS =
         { TeamColor.Blue, TeamColor.Red, TeamColor.Yellow, TeamColor.Black, TeamColor.Green };
 
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public static readonly Dictionary<TeamColor, SpatialData[]> WAGON_PLACEMENT = new() {
         {
             TeamColor.Blue, new SpatialData[45] {

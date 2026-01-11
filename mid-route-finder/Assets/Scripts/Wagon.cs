@@ -3,18 +3,20 @@ using UnityEngine;
 public class Wagon : MonoBehaviour {
     [SerializeField] Renderer _cubeRenderer;
 
-    WagonRigidbody _wagonRb;
+    IFallingWagon _fallingWagon;
 
-    public void Init(WagonRigidbody wagonRb) {
-        _wagonRb = wagonRb;
+    public void Init(IFallingWagon fallingWagon) {
+        _fallingWagon = fallingWagon;
 
-        _cubeRenderer.material = ResourceLibrary._.WagonMaterials[wagonRb.TeamColor];
+        _cubeRenderer.material = ResourceLibrary._.WagonMaterials[fallingWagon.TeamColor];
     }
 
     public void Place() {
-        transform.position = _wagonRb.transform.position;
-        transform.rotation = _wagonRb.transform.rotation;
+        transform.position = _fallingWagon.SpatialData.position;
+        transform.rotation = _fallingWagon.SpatialData.rotation;
 
-        Wagon.Destroy(_wagonRb.gameObject);
+        var realFallingWagon = _fallingWagon as FallingWagon;
+        if (realFallingWagon)
+            Wagon.Destroy(realFallingWagon.gameObject);
     }
 }

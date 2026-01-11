@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7946147112997960278}
   - component: {fileID: 4521398281283480457}
   - component: {fileID: 6230742968775308452}
-  m_Layer: 0
+  m_Layer: 30
   m_Name: Cylinder (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ GameObject:
   - component: {fileID: 3683026576994453435}
   - component: {fileID: 4919080781727119774}
   - component: {fileID: 5685972937478015547}
-  m_Layer: 0
+  m_Layer: 30
   m_Name: Cylinder (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -189,7 +189,7 @@ GameObject:
   - component: {fileID: 1968826850168867076}
   - component: {fileID: 4094330536874251304}
   - component: {fileID: 3881171381878609496}
-  m_Layer: 0
+  m_Layer: 30
   m_Name: Wagon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -241,7 +241,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b293a3921ff2ed74ab85748f5c646f89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Wagon
-  TeamColor: 0
   _cubeRenderer: {fileID: 4519080756691804473}
 --- !u!1 &3888248413976768239
 GameObject:
@@ -254,7 +253,7 @@ GameObject:
   - component: {fileID: 8051887303410846448}
   - component: {fileID: 6920959198782033280}
   - component: {fileID: 7721280202210535281}
-  m_Layer: 0
+  m_Layer: 30
   m_Name: Cylinder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -343,7 +342,7 @@ GameObject:
   - component: {fileID: 4749120661675323879}
   - component: {fileID: 4249220790768909134}
   - component: {fileID: 4519080756691804473}
-  m_Layer: 0
+  m_Layer: 30
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -432,7 +431,7 @@ GameObject:
   - component: {fileID: 8432910436167384802}
   - component: {fileID: 8093039764814516502}
   - component: {fileID: 5085877627180206879}
-  m_Layer: 0
+  m_Layer: 30
   m_Name: Cylinder (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -6,6 +6,11 @@ namespace Game.Shared.Constants.Layer {
         public static readonly int MOVEMENT = 1 << 8;           // MOVEMENT is layer 8
         public static readonly int GROUND = 1 << 9;             // GROUND   is layer 9
 
+        public static readonly int UI_3D_Level_1 = 1 << 29;     // GROUND   is layer 29
+        public static readonly int UI_3D_Level_2 = 1 << 30;     // GROUND   is layer 30
+        public static readonly int UI_3D_Level_2_INDEX = 30;
+        public static readonly int UI_3D_Text = 1 << 31;        // GROUND   is layer 31
+
         //
         //public static readonly int CombinedLayerMask = GROUND | INTERACT;
         public static readonly int OBSTACLE_AND_INTERACT = OBSTACLE | INTERACT;

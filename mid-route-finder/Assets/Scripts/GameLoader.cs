@@ -5,10 +5,10 @@ using UnityEngine.SceneManagement;
 public class GameLoader : MonoBehaviour {
     void Start() {
         // Start a coroutine to load scenes
-        StartCoroutine(LoadGameScenes());
+        StartCoroutine(loadGameScenes());
     }
 
-    IEnumerator LoadGameScenes() {
+    IEnumerator loadGameScenes() {
         // 1️⃣ Load SampleScene as the main scene
         AsyncOperation mainLoad = SceneManager.LoadSceneAsync("PLAYER", LoadSceneMode.Additive);
 

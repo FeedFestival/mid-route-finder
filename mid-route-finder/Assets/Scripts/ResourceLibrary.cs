@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BezierSolution;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -23,6 +24,7 @@ public class ResourceLibrary : ScriptableObject {
     [SerializeField] internal GameObject PlanePrefab;
     [SerializeField] internal GameObject WagonRigidbodyPrefab;
     [SerializeField] internal GameObject WagonPrefab;
+    [SerializeField] internal BezierSpline BezierSplinePrefab;
 
     [Header("Materials")] public Material defaultMaterial;
     public Material Red;

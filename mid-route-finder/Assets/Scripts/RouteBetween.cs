@@ -1,36 +1,37 @@
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Game.Shared.Interfaces;
 using UnityEngine;
 
 public class RouteBetween : MonoBehaviour {
-    internal int RouteCost;
-    internal SpatialData[] PlaceholderPositions;
+    internal int Distance;
+    internal City FromCity;
+    internal City ToCity;
+    internal List<Route> Routes;
 
     [SerializeField] GameObject _plane;
 
-    float _distance;
-    City FromCity;
-    City ToCity;
-
     public void InitializeFromData(
-        float distance,
+        float physicalDistance,
         City fromCity,
         City toCity,
         routeSettings? routeSettings,
         float smallestDistance
     ) {
-        _distance = distance;
         FromCity = fromCity;
         ToCity = toCity;
 
-        RouteCost = getWagonCount(routeSettings, smallestDistance);
-        gameObject.name = $"Route ({RouteCost}) {FromCity.ID}. {FromCity.Name} -> {ToCity.Name}";
+        Distance = getWagonCount(routeSettings, physicalDistance, smallestDistance);
+        Routes = new();
+        gameObject.name = $"Route ({Distance}) {FromCity.ID}. {FromCity.Name} -> {ToCity.Name}";
 
         Vector3 from = FromCity.transform.position;
         Vector3 to = ToCity.transform.position;
         Vector3 dir = (to - from).normalized;
         float xScale = 1;
 
-        string colorName = routeSettings.HasValue ? routeSettings.Value.Color.ToString() : "default";
+        var color = routeSettings?.Color ?? RouteColor.Gray;
+        string colorName = color == RouteColor.Gray ? "default" : color.ToString();
         var routeGo = new GameObject($"Route {colorName}");
         routeGo.transform.parent = transform;
         Vector3 routePos = Vector3.Lerp(from, to, 0.5f);
@@ -39,7 +40,8 @@ public class RouteBetween : MonoBehaviour {
         routeGo.transform.rotation = Quaternion.LookRotation(dir);
 
         var route = routeGo.AddComponent<Route>();
-        route.Init(RouteCost, from, to, routeSettings?.EnforcedPlaceholderSizeRatio);
+        route.Init(Distance, from, to, routeSettings?.EnforcedPlaceholderSizeRatio);
+        Routes.Add(route);
 
         if (routeSettings.HasValue) {
             var settings = routeSettings.Value;
@@ -49,6 +51,7 @@ public class RouteBetween : MonoBehaviour {
                 var secondRouteGo = Instantiate(routeGo, transform);
                 var secondRoute = secondRouteGo.GetComponent<Route>();
                 secondRoute.ApplySettings(settings, settings.SecondColor);
+                Routes.Add(secondRoute);
 
                 float sideOffset = 0.42f;
                 Vector3 side = Vector3.Cross(Vector3.up, dir).normalized;
@@ -59,14 +62,25 @@ public class RouteBetween : MonoBehaviour {
             }
         }
 
-        PlaceholderPositions = route.GetPlaceholderPositions();
-
         positionPlane(ref _plane, from, to, xScale);
     }
 
     public void DisableInteractions() {
         var focusTrigger = gameObject.GetComponent<IFocusTrigger>();
         focusTrigger?.Disable();
+    }
+
+    public void EnableInteractions() {
+        var focusTrigger = gameObject.GetComponent<IFocusTrigger>();
+        focusTrigger?.Enable();
+    }
+
+    public bool RemoveRoute(RouteColor color) {
+        Route route = Routes.Find(it => it.Color == color);
+        Routes.Remove(route);
+        Destroy(route.gameObject);
+
+        return Routes.Count == 0;
     }
 
     void positionPlane(ref GameObject go, Vector3 from, Vector3 to, float xScale) {
@@ -85,8 +99,8 @@ public class RouteBetween : MonoBehaviour {
         (focusTrigger as RouteFocusTrigger)?.AlignAndScaleToFit(from, dir, go.transform.localScale.y, dist);
     }
 
-    int getWagonCount(routeSettings? routeSettings, float smallestDistance) {
-        int wagonCount = Mathf.Max(1, Mathf.FloorToInt(_distance / smallestDistance));
+    int getWagonCount(routeSettings? routeSettings, float physicalDistance, float smallestDistance) {
+        int wagonCount = Mathf.Max(1, Mathf.FloorToInt(physicalDistance / smallestDistance));
         if (routeSettings.HasValue && routeSettings.Value.EnforcedLength > 0) {
             wagonCount = routeSettings.Value.EnforcedLength;
         }
@@ -96,7 +110,7 @@ public class RouteBetween : MonoBehaviour {
 
     public override string ToString() {
         return $@"{{
-        ""distance"": {_distance},
+        ""distance"": {Distance},
         ""fromCity"": {{
             ""id"": {FromCity.ID},
             ""name"": ""{FromCity.Name}""
@@ -109,16 +123,17 @@ public class RouteBetween : MonoBehaviour {
     }
 }
 
-public struct routeData {
-    public readonly int ID;
-    public readonly string FromCityName;
-    public readonly float Distance;
-    public readonly string ToCityName;
+[SuppressMessage("ReSharper", "InconsistentNaming")]
+public struct RouteData {
+    public readonly int id;
+    public readonly string fromCityName;
+    public readonly float distance;
+    public readonly string toCityName;
 
-    public routeData(int id, float distance, string fromCityName, string toCityName) {
-        ID = id;
-        Distance = distance;
-        FromCityName = fromCityName;
-        ToCityName = toCityName;
+    public RouteData(int id, float distance, string fromCityName, string toCityName) {
+        this.id = id;
+        this.distance = distance;
+        this.fromCityName = fromCityName;
+        this.toCityName = toCityName;
     }
 }

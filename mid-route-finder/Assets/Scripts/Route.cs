@@ -3,7 +3,9 @@ using System.Linq;
 using UnityEngine;
 
 public class Route : MonoBehaviour {
+    internal RouteColor Color;
     GameObject[] _placeholders;
+    public bool InUse;
 
     public void Init(
         int wagonsCount,
@@ -52,8 +54,8 @@ public class Route : MonoBehaviour {
         }
     }
 
-    public SpatialData[] GetPlaceholderPositions() {
-        return _placeholders.Select(it => new SpatialData(it.transform.position, it.transform.rotation)).ToArray();
+    public SpatialData GetPlaceholderSpatialDataAt(int index) {
+        return new SpatialData(_placeholders[index].transform.position, _placeholders[index].transform.rotation);
     }
 
     static float getSegmentLength(int wagonsCount, Vector3 from, Vector3 to, float? enforcedPlaceholderSizeRatio) {
@@ -71,6 +73,7 @@ public class Route : MonoBehaviour {
             routeColor = routeSettings.Color;
         }
 
+        Color = routeColor.Value;
         gameObject.name = $"Route {routeColor.ToString()}";
 
         if (_placeholders == null) {

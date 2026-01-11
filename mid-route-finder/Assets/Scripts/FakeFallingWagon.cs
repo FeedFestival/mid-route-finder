@@ -1,7 +1,9 @@
-﻿namespace DefaultNamespace {
+﻿public struct fakeFallingWagon : IFallingWagon {
+    public TeamColor TeamColor { get; }
+    public SpatialData SpatialData { get; }
 
-public class FakeFallingWagon {
-    
-}
-
+    public fakeFallingWagon(SpatialData spatialData, TeamColor teamColor) {
+        SpatialData = spatialData;
+        TeamColor = teamColor;
+    }
 }

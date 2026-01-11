@@ -1,14 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using BezierSolution;
 using Game.Shared.Constants.Store;
 using Game.Shared.Core.Player_Input;
 using Game.Shared.Core.Store;
 using R3;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
-using Unity.Mathematics.Geometry;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -27,15 +25,17 @@ public class PlayerWagons : MonoBehaviour {
     [SerializeField]
     CityChecker _cityChecker;
 
-    [SerializeField] BezierSpline _bezierSpline;
+    [SerializeField] WagonMover _wagonMover;
+
+    [SerializeField] bool _initializeWithFallingWagons = false;
 
     Dictionary<TeamColor, Transform> _wagonsTs;
     Dictionary<TeamColor, List<Wagon>> _wagons;
-    static readonly Vector3 OutOfViewSpawnPosition = new Vector3(999, 999, 0);
+    static readonly Vector3 OutOfViewSpawnPosition = new(999, 999, 0);
 
     int _maxWagonsCount = 45;
     int _currentWagonIndex;
-    int _readyTeams = 0;
+    int _readyTeams;
     int _maxTeams = 5;
 
     void Awake() {
@@ -61,16 +61,31 @@ public class PlayerWagons : MonoBehaviour {
             if (!gameObject.activeSelf) return;
 
             if (gameplay == Gameplay.Exploration) {
-                PlayerInput.ExplorationActionMap.ConfirmSelect += clickPerformed;
+                PlayerInput.ExplorationActionMap.ConfirmSelect += ClickPerformed;
             }
             else {
-                PlayerInput.ExplorationActionMap.ConfirmSelect -= clickPerformed;
+                PlayerInput.ExplorationActionMap.ConfirmSelect -= ClickPerformed;
             }
         }).AddTo(ref d);
 
         d.RegisterTo(this.destroyCancellationToken);
 
-        StartCoroutine(spawnWagonsCoroutine());
+        if (_initializeWithFallingWagons) {
+            StartCoroutine(spawnWagonsCoroutine());
+        }
+        else {
+            // This can be used to resume a session or for debuging reasons, so we don't wait for cubes to fall
+
+            foreach (TeamColor color in PlayerConstants.TEAM_COLORS) {
+                var spatialDatas = PlayerConstants.WAGON_PLACEMENT[color];
+                for (int i = 0; i < spatialDatas.Length; i++) {
+                    var fakeFallingWagon = new fakeFallingWagon(spatialDatas[i], color);
+                    onWagonReady(fakeFallingWagon);
+                }
+            }
+
+            PlayerWagons.Destroy(_invisibleWallGo);
+        }
     }
 
 #if UNITY_EDITOR
@@ -103,60 +118,74 @@ public class PlayerWagons : MonoBehaviour {
     }
 #endif
 
-    void clickPerformed() {
+    internal void ClickPerformed() {
         var entityId = Store2.State.FocusedID.CurrentValue;
         if (entityId == 0) return;
 
-        Debug.Log($"clickPerformed -> entityId: {entityId}");
+        var routeBetween = _cityChecker.RoutesBetween[entityId];
 
-        var routesBetween = _cityChecker.GetRoutesBetween();
-        var routeBetween = routesBetween[entityId];
+        // ------------------------------ This is FOW NOW ----------------------------------------------------------
+        // TODO: This is we should get the route by looking for cardColor, right now we define it down below
+        Route testRoute = routeBetween.Routes.FirstOrDefault(it => !it.InUse);
 
-        TeamColor randomColor =
-            (TeamColor)UnityEngine.Random.Range(
+        // TODO: This is the card that should be considered the User has used from his hand
+        var cardColor = testRoute.Color;
+
+        // ------------------------------ end FOR NOW --------------------------------------------------------------
+
+        Route route = routeBetween.Routes.Find(it => it.Color == cardColor && !it.InUse);
+        if (!route) {
+            Debug.LogError(
+                $"You selected a RouteBetween {routeBetween.gameObject.name} that has no more Routes. How did this happen?");
+            return;
+        }
+
+        route.InUse = true;
+        var isRouteBlocked = routeBetween.Routes.Where(it => !it.InUse).Count() == 0;
+        if (isRouteBlocked) {
+            Store2.SetFocusedID(0);
+            Store2.SetFocusedInstanceID(-1);
+            _cityChecker.DisableCityPath(routeBetween.FromCity.ID, routeBetween.ToCity.ID);
+            routeBetween.DisableInteractions();
+        }
+
+        // TODO: this one should be retrieved from turn manager or from somwhere
+        TeamColor userColor =
+            (TeamColor)Random.Range(
                 0,
                 System.Enum.GetValues(typeof(TeamColor)).Length
             );
 
-        var coloredWagons = _wagons[randomColor];
-
-        if (coloredWagons == null || coloredWagons.Count == 0) return;
-
-        for (int i = 0; i < routeBetween.RouteCost; i++) {
-            var wagon = coloredWagons.FirstOrDefault();
-            if (wagon == null) {
-                Debug.LogError("Couldn't find any more wagons");
-                break;
-            }
-
-            moveWagonToPlaceholderPosition(wagon, routeBetween.PlaceholderPositions[i]);
-
-            coloredWagons.Remove(wagon);
+        var userWagons = _wagons[userColor];
+        if (userWagons == null || userWagons.Count == 0) {
+            Debug.LogError("Couldn't find any more wagons. I guess you won.");
+            return;
         }
 
-        routeBetween.DisableInteractions();
+        HashSet<Wagon> coloredWagons = new();
+        for (int i = 0; i < routeBetween.Distance; i++) {
+            var wagon = userWagons.FirstOrDefault();
+            coloredWagons.Add(wagon);
+            userWagons.Remove(wagon);
+        }
+
+        _wagonMover.PlaceWagons(routeBetween, coloredWagons, route, cardColor);
     }
 
-    void onWagonReady(WagonRigidbody wagonRb) {
-        var color = wagonRb.TeamColor;
-        var wagon = createWagon(_wagonsTs[color], wagonRb);
+    void onWagonReady(IFallingWagon fallingWagon) {
+        var color = fallingWagon.TeamColor;
+        var wagon = createWagon(_wagonsTs[color], fallingWagon);
 
         _wagons[color].Add(wagon);
 
         if (_wagons[color].Count == _maxWagonsCount) {
             _readyTeams++;
 
-            if (_readyTeams == _maxTeams) {
-                foreach (TeamColor teamColor in PlayerConstants.TEAM_COLORS) {
-                    _wagons[teamColor] = _wagons[teamColor].OrderBy(w => w.transform.position.y).ForEach(w => w.Place())
-                        .ToList();
-                }
-            }
+            tryStartGame();
         }
     }
 
     IEnumerator spawnWagonsCoroutine() {
-        int indexWhenToDestroyInvisibleWall = Mathf.FloorToInt(_maxWagonsCount * 0.90f);
         while (_currentWagonIndex < _maxWagonsCount) {
             foreach (KeyValuePair<TeamColor, Transform> kvpWagon in _wagonsTs) {
                 var t = kvpWagon.Value;
@@ -165,11 +194,11 @@ public class PlayerWagons : MonoBehaviour {
             }
 
             _currentWagonIndex++;
-            if (_currentWagonIndex == indexWhenToDestroyInvisibleWall)
-                PlayerWagons.Destroy(_invisibleWallGo);
 
             yield return new WaitForSeconds(0.18f);
         }
+
+        PlayerWagons.Destroy(_invisibleWallGo);
     }
 
     void createFallingWagon(Transform t, TeamColor color) {
@@ -183,31 +212,26 @@ public class PlayerWagons : MonoBehaviour {
         go.transform.position = pos;
         go.transform.rotation = Random.rotation;
 
-        var wagon = go.GetComponent<WagonRigidbody>();
+        var wagon = go.GetComponent<FallingWagon>();
         wagon.Init(color, onWagonReady);
     }
 
-    Wagon createWagon(Transform t, WagonRigidbody wagonRb) {
-        var go = PlayerWagons.Instantiate(ResourceLibrary._.WagonPrefab, OutOfViewSpawnPosition,
-            wagonRb.transform.rotation, t);
+    Wagon createWagon(Transform t, IFallingWagon fallingWagon) {
+        var go = PlayerWagons.Instantiate(
+            ResourceLibrary._.WagonPrefab, OutOfViewSpawnPosition, Quaternion.identity, t
+        );
 
         var wagon = go.GetComponent<Wagon>();
-        wagon.Init(wagonRb);
+        wagon.Init(fallingWagon);
         return wagon;
     }
 
-    void moveWagonToPlaceholderPosition(Wagon wagon, SpatialData placeholder) {
-        Debug.Log($"_bezierSpline.Count: {_bezierSpline.Count}");
-
-        float t = 0.1f;
-
-        _bezierSpline.GetPoint(t);
-
-        for (int i = 0; i < _bezierSpline.Count; i++) {
-            Debug.Log($"_bezierSpline[i].gameObject: {_bezierSpline[i].gameObject}");
+    void tryStartGame() {
+        if (_readyTeams == _maxTeams) {
+            foreach (TeamColor teamColor in PlayerConstants.TEAM_COLORS) {
+                _wagons[teamColor] = _wagons[teamColor].OrderBy(w => w.transform.position.y).ForEach(w => w.Place())
+                    .ToList();
+            }
         }
-
-        wagon.transform.position = placeholder.position;
-        wagon.transform.rotation = placeholder.rotation;
     }
 }
