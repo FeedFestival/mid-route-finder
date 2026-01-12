@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Main.unity
     guid: 9e34dd1efb1d9d54e8b09fa417e00588
   - enabled: 1
+    path: Assets/Scenes/TurnPlay.unity
+    guid: dc44d5ef37655644e957ba0f17050bab
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1

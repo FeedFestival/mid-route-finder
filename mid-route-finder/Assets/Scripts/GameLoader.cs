@@ -4,22 +4,25 @@ using UnityEngine.SceneManagement;
 
 public class GameLoader : MonoBehaviour {
     void Start() {
-        // Start a coroutine to load scenes
         StartCoroutine(loadGameScenes());
     }
 
     IEnumerator loadGameScenes() {
-        // 1️⃣ Load SampleScene as the main scene
-        AsyncOperation mainLoad = SceneManager.LoadSceneAsync("PLAYER", LoadSceneMode.Additive);
+        AsyncOperation playerLoad = SceneManager.LoadSceneAsync("PLAYER", LoadSceneMode.Additive);
 
-        // Wait until it's fully loaded
-        yield return mainLoad;
-
-        // 2️⃣ Load PLAYER scene additively
-        AsyncOperation playerLoad = SceneManager.LoadSceneAsync("SampleScene", LoadSceneMode.Additive);
-
-        // Wait until it's fully loaded
         yield return playerLoad;
+
+        AsyncOperation sampleSceneLoad = SceneManager.LoadSceneAsync("SampleScene", LoadSceneMode.Additive);
+
+        yield return sampleSceneLoad;
+
+        AsyncOperation turnPlayLoad = SceneManager.LoadSceneAsync("TurnPlay", LoadSceneMode.Additive);
+
+        yield return turnPlayLoad;
+
+        AsyncOperation unloadOp = SceneManager.UnloadSceneAsync("Main");
+
+        yield return unloadOp;
 
         Debug.Log("All scenes loaded successfully!");
     }
