@@ -4,6 +4,7 @@ using System.Linq;
 using BezierSolution;
 using DG.Tweening;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class WagonMover : MonoBehaviour {
     [SerializeField] int _initialPoolSize = 6;
@@ -57,26 +58,45 @@ public class WagonMover : MonoBehaviour {
         BezierSpline spline = getSpline();
 
         var fromPos = wagon.transform.position;
-        var toPos = spatialData.position;
+        var baseToPos = spatialData.position;
         var fromRot = wagon.transform.rotation;
-        var toRot = spatialData.rotation;
+        var baseToRot = spatialData.rotation;
+
+        float duration = Random.Range(1.8f, 2.4f);
+        float delay = Random.Range(0f, 0.4f);
+
+        float jitterValue = Random.Range(0.05f, 0.15f);
+
+        Vector3 posJitter = new Vector3(
+            Random.Range(-jitterValue, jitterValue),
+            0, // Random.Range(-0.1f, 0.1f),
+            Random.Range(-jitterValue, jitterValue)
+        );
+
+        Quaternion rotJitter = Quaternion.Euler(
+            0, // Random.Range(-6f, 6f),
+            Random.Range(-10f, 10f),
+            0 // Random.Range(-6f, 6f)
+        );
+
+        var toPos = baseToPos + posJitter;
+        var toRot = baseToRot * rotJitter;
 
         spline[0].position = fromPos;
 
         var dir = toPos - fromPos;
         var middlePos = fromPos + (dir * 0.32f);
-        middlePos.y = 32;
+        middlePos.y = 32f;
 
         spline[1].position = middlePos;
         spline[^1].position = toPos;
-
-        float duration = 2f;
 
         DOVirtual.Float(0f, 1f, duration, t => {
                 wagon.transform.position = spline.GetPoint(t);
                 wagon.transform.rotation = Quaternion.Slerp(fromRot, toRot, t);
             })
             .SetEase(Ease.InQuad)
+            .SetDelay(delay)
             .OnComplete(() => {
                 returnSpline(spline);
                 movementComplete?.Invoke();

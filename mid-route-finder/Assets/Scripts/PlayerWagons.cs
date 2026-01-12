@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ using Sirenix.Utilities;
 using UnityEditor;
 #endif
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class PlayerWagons : MonoBehaviour {
     [SerializeField] Transform _blueWagonT;
@@ -37,6 +39,8 @@ public class PlayerWagons : MonoBehaviour {
     int _currentWagonIndex;
     int _readyTeams;
     int _maxTeams = 5;
+    Func<RouteColor> _getPlayerPreparedCardsColor;
+    Func<TeamColor> _getPlayerTeamColor;
 
     void Awake() {
         _wagonsTs = new();
@@ -118,20 +122,20 @@ public class PlayerWagons : MonoBehaviour {
     }
 #endif
 
+    internal void SetTurnPlayDelegates(
+        Func<RouteColor> getPlayerPreparedCardsColor,
+        Func<TeamColor> getPlayerTeamColor
+    ) {
+        _getPlayerPreparedCardsColor = getPlayerPreparedCardsColor;
+        _getPlayerTeamColor = getPlayerTeamColor;
+    }
+
     internal void ClickPerformed() {
         var entityId = Store2.State.FocusedID.CurrentValue;
         if (entityId == 0) return;
 
+        var cardColor = _getPlayerPreparedCardsColor();
         var routeBetween = _cityChecker.RoutesBetween[entityId];
-
-        // ------------------------------ This is FOW NOW ----------------------------------------------------------
-        // TODO: This is we should get the route by looking for cardColor, right now we define it down below
-        Route testRoute = routeBetween.Routes.FirstOrDefault(it => !it.InUse);
-
-        // TODO: This is the card that should be considered the User has used from his hand
-        var cardColor = testRoute.Color;
-
-        // ------------------------------ end FOR NOW --------------------------------------------------------------
 
         Route route = routeBetween.Routes.Find(it => it.Color == cardColor && !it.InUse);
         if (!route) {
@@ -141,20 +145,17 @@ public class PlayerWagons : MonoBehaviour {
         }
 
         route.InUse = true;
+        var userColor = _getPlayerTeamColor();
         var isRouteBlocked = routeBetween.Routes.Where(it => !it.InUse).Count() == 0;
         if (isRouteBlocked) {
             Store2.SetFocusedID(0);
             Store2.SetFocusedInstanceID(-1);
-            _cityChecker.DisableCityPath(routeBetween.FromCity.ID, routeBetween.ToCity.ID);
+            _cityChecker.DisableCityPath(routeBetween.FromCity.ID, routeBetween.ToCity.ID, userColor);
             routeBetween.DisableInteractions();
         }
-
-        // TODO: this one should be retrieved from turn manager or from somwhere
-        TeamColor userColor =
-            (TeamColor)Random.Range(
-                0,
-                System.Enum.GetValues(typeof(TeamColor)).Length
-            );
+        else {
+            // TODO: modify _cityChecker -> City Paths -> To know what colors are on them
+        }
 
         var userWagons = _wagons[userColor];
         if (userWagons == null || userWagons.Count == 0) {

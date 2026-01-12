@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Game.Shared.Interfaces.EntitySystem;
 using Sirenix.OdinInspector;
@@ -15,20 +13,27 @@ public class CityChecker : MonoBehaviour {
     Transform _cityVisualizerT;
     Transform _routesT;
 
-    List<City> _cities;
+    internal List<City> Cities;
     internal Dictionary<ulong, RouteBetween> RoutesBetween { get; private set; }
 
-    public void DisableCityPath(int fromCityID, int toCityID) {
-        var fromCity = _cities.Find(it => it.ID == fromCityID);
-        var toCity = _cities.Find(it => it.ID == toCityID);
+    public void DisableCityPath(int fromCityID, int toCityID, TeamColor color) {
+        var fromCity = Cities.Find(it => it.ID == fromCityID);
+        var toCity = Cities.Find(it => it.ID == toCityID);
 
         int index = fromCity.Paths.FindIndex(it => it.to.ID == toCity.ID);
+        var path = fromCity.Paths[index];
+        var modifiedPath = new PathTo(path, color, false);
         fromCity.Paths.RemoveAt(index);
+        fromCity.Paths.Add(modifiedPath);
+
         index = toCity.Paths.FindIndex(it => it.to.ID == fromCity.ID);
+        path = toCity.Paths[index];
+        modifiedPath = new PathTo(path, color, false);
         toCity.Paths.RemoveAt(index);
+        toCity.Paths.Add(modifiedPath);
     }
 
-    void Start() {
+    void Awake() {
         var routesData = loadCitiesAndCreateRoutesData();
         drawRouteBetween(routesData);
     }
@@ -44,8 +49,8 @@ public class CityChecker : MonoBehaviour {
             var routeGo = Instantiate(ResourceLibrary._.RouteBetweenPrefab, Vector3.zero, Quaternion.identity,
                 _routesT);
             var routeBetween = routeGo.GetComponent<RouteBetween>();
-            var fromCity = _cities.Find(it => it.Name == routeData.fromCityName);
-            var toCity = _cities.Find(it => it.Name == routeData.toCityName);
+            var fromCity = Cities.Find(it => it.Name == routeData.fromCityName);
+            var toCity = Cities.Find(it => it.Name == routeData.toCityName);
             routeSettings? routeSettings = tryGetRouteSettings(routeData.fromCityName, routeData.toCityName);
 
             routeBetween.InitializeFromData(
@@ -58,19 +63,18 @@ public class CityChecker : MonoBehaviour {
 
             if (fromCity.Paths == null)
                 fromCity.Paths = new();
-
-            fromCity.Paths.Add(new(toCity, routeBetween.Distance));
+            fromCity.Paths.Add(new(toCity, routeBetween.ID, routeBetween.Distance));
 
             if (toCity.Paths == null)
                 toCity.Paths = new();
-            toCity.Paths.Add(new(fromCity, routeBetween.Distance));
+            toCity.Paths.Add(new(fromCity, routeBetween.ID, routeBetween.Distance));
 
             RoutesBetween.Add(routeBetween.GetComponent<IEntityId>().ID, routeBetween);
         }
     }
 
     List<RouteData> loadCitiesAndCreateRoutesData() {
-        _cities = new();
+        Cities = new();
 
         if (_cityVisualizerT == null)
             _cityVisualizerT = new GameObject("_cityVisualizerT").transform;
@@ -118,7 +122,7 @@ public class CityChecker : MonoBehaviour {
 
             allowedIds.AddRange(routesIds);
 
-            _cities.Add(city);
+            Cities.Add(city);
         }
 
         routesData = routesData
@@ -132,8 +136,8 @@ public class CityChecker : MonoBehaviour {
 
         foreach (var requiredRoute in RouteConstants.REQUIRED_ROUTES) {
             id++;
-            var fromCity = _cities.Find(it => it.Name == requiredRoute.FromCityName);
-            var toCity = _cities.Find(it => it.Name == requiredRoute.ToCityName);
+            var fromCity = Cities.Find(it => it.Name == requiredRoute.FromCityName);
+            var toCity = Cities.Find(it => it.Name == requiredRoute.ToCityName);
             float dist = Vector3.Distance(fromCity.transform.position, toCity.transform.position);
             routesData.Add(new RouteData(id, dist, requiredRoute.FromCityName, requiredRoute.ToCityName));
         }
@@ -157,7 +161,7 @@ public class CityChecker : MonoBehaviour {
         if (!Application.isPlaying) return;
 
         string json = string.Empty;
-        foreach (City city in _cities) {
+        foreach (City city in Cities) {
             json += $"{city}, \n";
         }
 
@@ -169,8 +173,8 @@ public class CityChecker : MonoBehaviour {
     void findShortestPathTest() {
         if (!Application.isPlaying) return;
 
-        var fromCity = _cities.Find(it => it.Name == "Arad");
-        var toCity = _cities.Find(it => it.Name == "Constanta");
+        var fromCity = Cities.Find(it => it.Name == "Arad");
+        var toCity = Cities.Find(it => it.Name == "Constanta");
 
         var hasPath = Pathfinding.FindShortestPath(fromCity, toCity, out List<City> shortestPath, out int totalCost);
 
@@ -179,49 +183,61 @@ public class CityChecker : MonoBehaviour {
     }
 
     [ButtonGroup]
-    void calculateAllPossibleCards() {
+    void calculateAllPossibleMissions() {
         if (!Application.isPlaying) return;
 
-        HashSet<CardData> cardsData = new();
+        HashSet<Mission> missions = new();
 
         int minCost = 4;
-        int maxImportancePoints = (_cities.Count * 2) + 2;
-        foreach (City cityA in _cities) {
-            foreach (City cityB in _cities) {
+        int maxImportancePoints = (Cities.Count * 2) + 2;
+        foreach (City cityA in Cities) {
+            foreach (City cityB in Cities) {
                 if (cityA.ID == cityB.ID) continue;
 
-                Pathfinding.FindShortestPath(cityA, cityB, out List<City> path, out int cost);
+                Pathfinding.FindShortestPath(cityA, cityB, out List<City> cities, out int cost);
+
+                int pathCount = 0;
+                foreach (City city in cities) {
+                    if (city.ID != cityA.ID)
+                        pathCount++;
+                }
+
+                if (pathCount < 4) continue;
+
+                // Debug.Log($"pathCount: {pathCount}");
 
                 if (cost < minCost) continue;
 
-                cardsData.Add(new(cityA, cityB, cost, maxImportancePoints - cityA.ID - cityB.ID));
+                missions.Add(new(cityA, cityB, cost, maxImportancePoints - cityA.ID - cityB.ID));
             }
         }
 
-        var cards = cardsData.OrderByDescending(it => it.cost).ToArray();
-        var cardBank = new Dictionary<Category, CardData[]>() {
+        var sortedMissions = missions.OrderByDescending(it => it.cost).ToArray();
+        var missionBank = new Dictionary<Category, Mission[]>() {
             {
-                Category.Local, CardConstants.GetCategoryCardData(cards, Category.Local)
+                Category.Local, CardConstants.GetCategoryMissions(sortedMissions, Category.Local)
             }, {
-                Category.Regional, CardConstants.GetCategoryCardData(cards, Category.Regional)
+                Category.Regional, CardConstants.GetCategoryMissions(sortedMissions, Category.Regional)
             }, {
-                Category.InterRegional, CardConstants.GetCategoryCardData(cards, Category.InterRegional)
+                Category.InterRegional, CardConstants.GetCategoryMissions(sortedMissions, Category.InterRegional)
             }, {
-                Category.Long, CardConstants.GetCategoryCardData(cards, Category.Long)
+                Category.Long, CardConstants.GetCategoryMissions(sortedMissions, Category.Long)
             }, {
-                Category.Epic, CardConstants.GetCategoryCardData(cards, Category.Epic)
+                Category.Epic, CardConstants.GetCategoryMissions(sortedMissions, Category.Epic)
             }
         };
 
+        int missionCount = 0;
         string s = string.Empty;
-        foreach (var kvp in cardBank) {
+        foreach (var kvp in missionBank) {
             var category = kvp.Key;
-            var categoryCards = kvp.Value;
+            var categoryMissions = kvp.Value;
             s += $@"{{
-    Category.{category.ToString()}, new CardData[{categoryCards.Length}] {{";
-            foreach (CardData card in categoryCards) {
+    Category.{category.ToString()}, new Mission[{categoryMissions.Length}] {{";
+            foreach (Mission mission in categoryMissions) {
+                missionCount++;
                 s += $@"
-        new(""{card.cityA}"", ""{card.cityB}"", {card.cost}, {card.importancePoints}),";
+        new(""{mission.cityA}"", ""{mission.cityB}"", {mission.cost}, {mission.importancePoints}),";
             }
 
             s += $@"
@@ -232,7 +248,7 @@ public class CityChecker : MonoBehaviour {
         // Copy to clipboard
         EditorGUIUtility.systemCopyBuffer = s;
 
-        Debug.Log("Wagon placement copied to clipboard! Should paste it in PlayerConstants WAGON_PLACEMENT Dictionary");
+        Debug.Log($"{missionCount} possible mission were copied to clipboard! Should paste it in CardConstants MISSION_BANK Dictionary");
     }
 #endif
 }

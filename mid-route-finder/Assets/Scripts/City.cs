@@ -57,12 +57,43 @@ public class City : MonoBehaviour {
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public struct PathTo {
     public City to;
+    public ulong routeBetweenID;
     public int cost;
+    public TeamColor? teamColor;
     public bool available;
 
-    public PathTo(City to, int cost) {
+    public PathTo(City to, ulong routeBetweenID, int cost) {
         this.to = to;
+        this.routeBetweenID = routeBetweenID;
         this.cost = cost;
+
+        teamColor = null;
         available = true;
+    }
+
+    public PathTo(PathTo pathTo, TeamColor teamColor) {
+        to = pathTo.to;
+        routeBetweenID = pathTo.routeBetweenID;
+        cost = pathTo.cost;
+        this.teamColor = teamColor;
+
+        available = true;
+    }
+
+    public PathTo(PathTo pathTo, TeamColor teamColor, bool available) {
+        to = pathTo.to;
+        routeBetweenID = pathTo.routeBetweenID;
+        cost = pathTo.cost;
+        this.teamColor = teamColor;
+        this.available = available;
+    }
+
+    public override string ToString() {
+        return $@"{{
+    ""to"": ""{to.ID} {to.Name}"",
+    ""routeBetweenID"": ""{routeBetweenID}""
+    ""cost"": {cost},
+    ""available"": {available},
+}}";
     }
 }

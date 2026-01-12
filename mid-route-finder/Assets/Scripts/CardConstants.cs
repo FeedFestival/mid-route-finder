@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using UnityEngine;
 
 public enum Category {
     Local = 0, // PROXIMITY_1
@@ -12,14 +13,14 @@ public enum Category {
 }
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
-public readonly struct CardData : IEquatable<CardData> {
+public readonly struct Mission : IEquatable<Mission> {
     internal readonly string cityA;
     internal readonly string cityB;
     internal readonly int cost;
     internal readonly int importancePoints;
     internal readonly Category category;
 
-    public CardData(City cityA, City cityB, int cost, int importancePoints) {
+    public Mission(City cityA, City cityB, int cost, int importancePoints) {
         // Enforce deterministic order
         if (cityA.ID < cityB.ID) {
             this.cityA = cityA.Name;
@@ -35,7 +36,7 @@ public readonly struct CardData : IEquatable<CardData> {
         category = CardConstants.GetCategory(cost);
     }
 
-    public CardData(string cityA, string cityB, int cost, int importancePoints) {
+    public Mission(string cityA, string cityB, int cost, int importancePoints) {
         this.cityA = cityA;
         this.cityB = cityB;
         this.cost = cost;
@@ -43,17 +44,27 @@ public readonly struct CardData : IEquatable<CardData> {
         category = CardConstants.GetCategory(cost);
     }
 
-    public bool Equals(CardData other) {
+    public bool Equals(Mission other) {
         return Equals(cityA, other.cityA) && Equals(cityB, other.cityB) && cost == other.cost &&
                importancePoints == other.importancePoints;
     }
 
     public override bool Equals(object obj) {
-        return obj is CardData other && Equals(other);
+        return obj is Mission other && Equals(other);
     }
 
     public override int GetHashCode() {
         return HashCode.Combine(cityA, cityB, cost, importancePoints);
+    }
+
+    public override string ToString() {
+        return "{{" +
+               $"\"cityA\":\"{cityA}\"," +
+               $"\"cityB\":\"{cityB}\"," +
+               $"\"cost\":{cost}," +
+               $"\"importancePoints\":{importancePoints}," +
+               $"\"category\":\"{category}\"" +
+               "}}";
     }
 }
 
@@ -67,439 +78,180 @@ public static class CardConstants {
         return Category.Epic;
     }
 
-    public static CardData[] GetCategoryCardData(CardData[] cards, Category category) {
+    public static Mission[] GetCategoryMissions(Mission[] cards, Category category) {
         return cards.Where(c => c.category == category)
             .OrderByDescending(it => it.importancePoints)
             .ThenByDescending(it => it.cost)
             .ToArray();
     }
 
-    public static readonly Dictionary<Category, CardData[]> CARD_BANK = new() {
+    public static readonly Dictionary<Category, int> MISSION_CARD_COUNT = new() {
+        { Category.Local, 4 },
+        { Category.Regional, 8 },
+        { Category.InterRegional, 11 },
+        { Category.Long, 5 },
+        { Category.Epic, 5 },
+    };
+
+    public static Mission DrawWeighted(ref List<Mission> missions) {
+        int totalWeight = 0;
+
+        for (int i = 0; i < missions.Count; i++)
+            totalWeight += Mathf.Max(1, missions[i].importancePoints);
+
+        int roll = UnityEngine.Random.Range(0, totalWeight);
+
+        int cumulative = 0;
+        for (int i = 0; i < missions.Count; i++) {
+            cumulative += Mathf.Max(1, missions[i].importancePoints);
+            if (roll < cumulative) {
+                Mission chosen = missions[i];
+                missions.RemoveAt(i); // remove → no duplicates
+                return chosen;
+            }
+        }
+
+        // Fallback (should never happen)
+        var last = missions[^1];
+        missions.RemoveAt(missions.Count - 1);
+        return last;
+    }
+
+    public static readonly Dictionary<Category, Mission[]> MISSION_BANK = new() {
         {
-            Category.Local, new CardData[189] {
-                new("Bucuresti", "Constanta", 7, 80),
-                new("Iasi", "Suceava", 5, 77),
+            Category.Local, new Mission[18] {
                 new("Bucuresti", "Craiova", 7, 76),
-                new("Bucuresti", "Pitesti", 4, 75),
                 new("Ploiesti", "Craiova", 5, 74),
-                new("Bucuresti", "Brasov", 5, 73),
-                new("Bucuresti", "Galati", 7, 71),
-                new("Cluj Napoca", "Oradea", 5, 71),
-                new("Suceava", "Bacau", 5, 71),
-                new("Iasi", "Galati", 7, 70),
-                new("Timisoara", "Oradea", 7, 69),
-                new("Ploiesti", "Galati", 6, 69),
-                new("Iasi", "Piatra Neamt", 5, 68),
-                new("Constanta", "Galati", 7, 67),
-                new("Bacau", "Brasov", 7, 66),
-                new("Bucuresti", "Buzau", 4, 66),
                 new("Craiova", "Brasov", 7, 65),
-                new("Cluj Napoca", "Baia Mare", 5, 65),
-                new("Bacau", "Galati", 7, 64),
-                new("Iasi", "Botosani", 4, 64),
-                new("Pitesti", "Brasov", 4, 64),
-                new("Pitesti", "Targu Mures", 7, 63),
-                new("Bucuresti", "Slatina", 6, 63),
-                new("Constanta", "Buzau", 7, 62),
                 new("Ploiesti", "Sibiu", 6, 62),
-                new("Craiova", "Targoviste", 4, 62),
-                new("Brasov", "Targu Mures", 7, 61),
-                new("Cluj Napoca", "Sibiu", 5, 61),
-                new("Ploiesti", "Slatina", 4, 61),
-                new("Bucuresti", "Ramnicu Valcea", 5, 60),
-                new("Bucuresti", "Focsani", 6, 59),
-                new("Bacau", "Buzau", 6, 59),
-                new("Iasi", "Focsani", 7, 58),
                 new("Craiova", "Buzau", 7, 58),
-                new("Bacau", "Botosani", 6, 58),
-                new("Oradea", "Baia Mare", 6, 58),
-                new("Brasov", "Piatra Neamt", 6, 58),
-                new("Cluj Napoca", "Deva", 5, 58),
-                new("Targu Mures", "Piatra Neamt", 7, 57),
                 new("Galati", "Targoviste", 7, 57),
-                new("Oradea", "Arad", 5, 57),
-                new("Ploiesti", "Focsani", 4, 57),
-                new("Pitesti", "Buzau", 4, 57),
-                new("Suceava", "Vaslui", 7, 56),
-                new("Craiova", "Sibiu", 7, 56),
-                new("Targu Mures", "Baia Mare", 7, 56),
-                new("Timisoara", "Deva", 5, 56),
-                new("Cluj Napoca", "Satu Mare", 5, 55),
-                new("Brasov", "Buzau", 5, 55),
-                new("Pitesti", "Sibiu", 4, 55),
-                new("Ploiesti", "Alexandria", 5, 54),
-                new("Craiova", "Deva", 7, 53),
                 new("Ploiesti", "Targu Jiu", 6, 53),
-                new("Brasov", "Sibiu", 5, 53),
-                new("Galati", "Buzau", 4, 53),
-                new("Iasi", "Miercurea Ciuc", 7, 52),
-                new("Timisoara", "Alba Iulia", 7, 52),
-                new("Brasov", "Slatina", 6, 52),
-                new("Bucuresti", "Calarasi", 4, 52),
-                new("Bacau", "Focsani", 4, 52),
-                new("Craiova", "Ramnicu Valcea", 4, 52),
-                new("Bucuresti", "Braila", 6, 51),
-                new("Ploiesti", "Miercurea Ciuc", 6, 51),
-                new("Oradea", "Deva", 6, 51),
-                new("Cluj Napoca", "Miercurea Ciuc", 7, 50),
-                new("Timisoara", "Targu Jiu", 7, 50),
-                new("Ploiesti", "Calarasi", 6, 50),
                 new("Pitesti", "Focsani", 6, 50),
-                new("Targoviste", "Sibiu", 5, 50),
-                new("Piatra Neamt", "Botosani", 4, 50),
-                new("Targu Mures", "Deva", 6, 49),
-                new("Ploiesti", "Braila", 5, 49),
-                new("Brasov", "Ramnicu Valcea", 5, 49),
-                new("Galati", "Vaslui", 5, 49),
-                new("Suceava", "Bistrita", 6, 48),
-                new("Pitesti", "Alba Iulia", 6, 48),
-                new("Brasov", "Focsani", 6, 48),
-                new("Targu Mures", "Ramnicu Valcea", 6, 48),
-                new("Craiova", "Alexandria", 5, 48),
-                new("Ploiesti", "Giurgiu", 4, 48),
-                new("Constanta", "Calarasi", 4, 48),
-                new("Oradea", "Satu Mare", 4, 48),
-                new("Pitesti", "Alexandria", 7, 47),
-                new("Constanta", "Braila", 6, 47),
-                new("Suceava", "Miercurea Ciuc", 6, 47),
-                new("Ploiesti", "Slobozia", 5, 47),
-                new("Piatra Neamt", "Vaslui", 4, 47),
-                new("Brasov", "Alba Iulia", 7, 46),
-                new("Bacau", "Miercurea Ciuc", 4, 46),
-                new("Pitesti", "Targu Jiu", 4, 46),
-                new("Bucuresti", "Sfantu Gheorghe", 6, 45),
                 new("Buzau", "Slatina", 6, 45),
-                new("Targoviste", "Focsani", 5, 45),
-                new("Constanta", "Slobozia", 4, 45),
-                new("Targu Mures", "Alba Iulia", 4, 45),
-                new("Bacau", "Braila", 7, 44),
                 new("Pitesti", "Miercurea Ciuc", 7, 44),
-                new("Piatra Neamt", "Focsani", 6, 44),
-                new("Arad", "Deva", 5, 44),
-                new("Targu Mures", "Targu Jiu", 7, 43),
                 new("Targoviste", "Alba Iulia", 7, 43),
-                new("Botosani", "Vaslui", 6, 43),
-                new("Sibiu", "Slatina", 6, 43),
-                new("Ploiesti", "Sfantu Gheorghe", 4, 43),
-                new("Ploiesti", "Tulcea", 7, 42),
-                new("Timisoara", "Drobeta Turnu Severin", 7, 42),
                 new("Pitesti", "Braila", 7, 42),
-                new("Craiova", "Giurgiu", 6, 42),
-                new("Targoviste", "Alexandria", 6, 42),
                 new("Buzau", "Ramnicu Valcea", 5, 42),
-                new("Pitesti", "Giurgiu", 6, 41),
-                new("Targoviste", "Targu Jiu", 5, 41),
-                new("Targu Mures", "Miercurea Ciuc", 4, 41),
-                new("Sibiu", "Deva", 4, 41),
-                new("Craiova", "Resita", 7, 40),
                 new("Pitesti", "Slobozia", 7, 40),
-                new("Arad", "Alba Iulia", 7, 40),
-                new("Constanta", "Tulcea", 4, 40),
-                new("Brasov", "Giurgiu", 7, 39),
-                new("Targoviste", "Miercurea Ciuc", 6, 39),
-                new("Piatra Neamt", "Bistrita", 6, 39),
-                new("Galati", "Calarasi", 5, 39),
-                new("Craiova", "Drobeta Turnu Severin", 4, 39),
-                new("Targoviste", "Calarasi", 7, 38),
-                new("Buzau", "Alexandria", 7, 38),
-                new("Bacau", "Sfantu Gheorghe", 6, 38),
-                new("Pitesti", "Drobeta Turnu Severin", 6, 38),
-                new("Baia Mare", "Bistrita", 4, 38),
-                new("Deva", "Ramnicu Valcea", 7, 37),
-                new("Targoviste", "Braila", 6, 37),
-                new("Vaslui", "Focsani", 6, 37),
-                new("Pitesti", "Sfantu Gheorghe", 5, 36),
-                new("Targoviste", "Giurgiu", 5, 36),
-                new("Galati", "Slobozia", 4, 36),
-                new("Botosani", "Bistrita", 7, 35),
                 new("Ramnicu Valcea", "Focsani", 7, 35),
-                new("Targoviste", "Slobozia", 6, 35),
-                new("Slatina", "Alexandria", 6, 35),
-                new("Sibiu", "Targu Jiu", 4, 35),
-                new("Botosani", "Miercurea Ciuc", 7, 34),
-                new("Sibiu", "Bistrita", 6, 34),
-                new("Targu Mures", "Zalau", 5, 34),
-                new("Buzau", "Calarasi", 4, 34),
-                new("Slatina", "Targu Jiu", 4, 34),
                 new("Targoviste", "Drobeta Turnu Severin", 7, 33),
-                new("Sibiu", "Miercurea Ciuc", 7, 33),
-                new("Targu Mures", "Sfantu Gheorghe", 6, 33),
-                new("Ramnicu Valcea", "Alba Iulia", 5, 33),
-                new("Buzau", "Giurgiu", 6, 32),
-                new("Deva", "Targu Jiu", 4, 32),
-                new("Vaslui", "Miercurea Ciuc", 6, 31),
-                new("Arad", "Resita", 5, 31),
-                new("Targoviste", "Sfantu Gheorghe", 4, 31),
-                new("Piatra Neamt", "Sfantu Gheorghe", 5, 30),
-                new("Slatina", "Giurgiu", 7, 29),
-                new("Vaslui", "Braila", 6, 29),
-                new("Focsani", "Miercurea Ciuc", 7, 28),
-                new("Satu Mare", "Bistrita", 6, 28),
-                new("Alba Iulia", "Targu Jiu", 6, 28),
-                new("Buzau", "Sfantu Gheorghe", 6, 27),
-                new("Sibiu", "Drobeta Turnu Severin", 6, 27),
-                new("Focsani", "Calarasi", 6, 27),
-                new("Alba Iulia", "Bistrita", 6, 27),
-                new("Sibiu", "Zalau", 7, 26),
                 new("Ramnicu Valcea", "Giurgiu", 7, 26),
-                new("Buzau", "Tulcea", 5, 26),
-                new("Slatina", "Drobeta Turnu Severin", 5, 26),
-                new("Sibiu", "Sfantu Gheorghe", 6, 25),
                 new("Slatina", "Sfantu Gheorghe", 7, 24),
-                new("Ramnicu Valcea", "Resita", 7, 24),
-                new("Alexandria", "Calarasi", 7, 24),
-                new("Deva", "Drobeta Turnu Severin", 6, 24),
-                new("Focsani", "Slobozia", 5, 24),
-                new("Deva", "Zalau", 7, 23),
-                new("Bistrita", "Miercurea Ciuc", 6, 23),
-                new("Ramnicu Valcea", "Drobeta Turnu Severin", 5, 23),
-                new("Ramnicu Valcea", "Sfantu Gheorghe", 6, 21),
-                new("Alexandria", "Slobozia", 6, 21),
-                new("Focsani", "Sfantu Gheorghe", 5, 20),
-                new("Focsani", "Tulcea", 5, 19),
-                new("Alba Iulia", "Zalau", 5, 19),
-                new("Targu Jiu", "Resita", 4, 19),
-                new("Calarasi", "Braila", 4, 19),
-                new("Calarasi", "Giurgiu", 6, 18),
-                new("Bistrita", "Zalau", 5, 16),
-                new("Giurgiu", "Slobozia", 5, 15),
-                new("Calarasi", "Tulcea", 6, 12),
-                new("Resita", "Drobeta Turnu Severin", 4, 11),
-                new("Slobozia", "Tulcea", 5, 9),
             }
         }, {
-            Category.Regional, new CardData[228] {
+            Category.Regional, new Mission[108] {
                 new("Iasi", "Ploiesti", 11, 81),
                 new("Ploiesti", "Cluj Napoca", 11, 79),
-                new("Ploiesti", "Constanta", 9, 78),
-                new("Bucuresti", "Bacau", 10, 77),
-                new("Cluj Napoca", "Timisoara", 10, 76),
-                new("Cluj Napoca", "Suceava", 9, 75),
-                new("Ploiesti", "Bacau", 8, 75),
-                new("Cluj Napoca", "Bacau", 11, 74),
                 new("Bucuresti", "Targu Mures", 11, 72),
                 new("Iasi", "Brasov", 10, 72),
                 new("Cluj Napoca", "Pitesti", 9, 72),
-                new("Iasi", "Targu Mures", 11, 71),
                 new("Constanta", "Pitesti", 11, 71),
-                new("Timisoara", "Craiova", 10, 71),
                 new("Timisoara", "Pitesti", 11, 70),
-                new("Cluj Napoca", "Brasov", 10, 70),
                 new("Ploiesti", "Targu Mures", 9, 70),
                 new("Bucuresti", "Piatra Neamt", 11, 69),
                 new("Bacau", "Pitesti", 10, 68),
-                new("Timisoara", "Targu Mures", 11, 67),
                 new("Cluj Napoca", "Targoviste", 10, 67),
                 new("Ploiesti", "Piatra Neamt", 9, 67),
                 new("Suceava", "Brasov", 9, 67),
                 new("Constanta", "Targoviste", 10, 66),
-                new("Cluj Napoca", "Piatra Neamt", 9, 66),
-                new("Suceava", "Targu Mures", 9, 66),
-                new("Iasi", "Buzau", 9, 65),
-                new("Bacau", "Targu Mures", 8, 65),
-                new("Cluj Napoca", "Arad", 10, 64),
-                new("Craiova", "Targu Mures", 10, 64),
                 new("Bucuresti", "Sibiu", 8, 64),
                 new("Craiova", "Galati", 11, 63),
                 new("Bacau", "Targoviste", 9, 63),
-                new("Cluj Napoca", "Botosani", 10, 62),
-                new("Suceava", "Baia Mare", 10, 62),
                 new("Pitesti", "Galati", 8, 62),
-                new("Oradea", "Targu Mures", 8, 62),
                 new("Cluj Napoca", "Slatina", 11, 60),
                 new("Suceava", "Buzau", 11, 60),
                 new("Ploiesti", "Vaslui", 10, 60),
                 new("Pitesti", "Piatra Neamt", 10, 60),
                 new("Brasov", "Galati", 9, 60),
                 new("Ploiesti", "Deva", 10, 59),
-                new("Timisoara", "Sibiu", 9, 59),
                 new("Timisoara", "Slatina", 11, 58),
                 new("Targu Mures", "Targoviste", 8, 58),
-                new("Bacau", "Sibiu", 11, 57),
                 new("Bucuresti", "Alba Iulia", 10, 57),
-                new("Cluj Napoca", "Ramnicu Valcea", 8, 57),
-                new("Galati", "Piatra Neamt", 9, 56),
-                new("Targu Mures", "Arad", 11, 55),
-                new("Timisoara", "Ramnicu Valcea", 10, 55),
-                new("Constanta", "Focsani", 9, 55),
                 new("Targoviste", "Piatra Neamt", 9, 55),
                 new("Bucuresti", "Targu Jiu", 8, 55),
                 new("Ploiesti", "Alba Iulia", 8, 55),
                 new("Targu Mures", "Buzau", 11, 54),
                 new("Oradea", "Sibiu", 10, 54),
                 new("Brasov", "Botosani", 10, 54),
-                new("Iasi", "Bistrita", 11, 53),
-                new("Timisoara", "Satu Mare", 11, 53),
                 new("Bacau", "Ramnicu Valcea", 11, 53),
-                new("Targu Mures", "Botosani", 10, 53),
-                new("Piatra Neamt", "Baia Mare", 10, 53),
-                new("Suceava", "Focsani", 9, 53),
                 new("Bucuresti", "Miercurea Ciuc", 8, 53),
-                new("Galati", "Botosani", 11, 52),
-                new("Constanta", "Alexandria", 10, 52),
-                new("Cluj Napoca", "Targu Jiu", 9, 52),
-                new("Pitesti", "Deva", 8, 52),
-                new("Baia Mare", "Arad", 11, 51),
                 new("Craiova", "Focsani", 9, 51),
                 new("Brasov", "Vaslui", 9, 51),
                 new("Targu Mures", "Slatina", 9, 51),
-                new("Piatra Neamt", "Buzau", 8, 51),
-                new("Targu Mures", "Vaslui", 10, 50),
                 new("Galati", "Slatina", 10, 50),
-                new("Brasov", "Deva", 9, 50),
-                new("Iasi", "Braila", 8, 50),
-                new("Baia Mare", "Botosani", 11, 49),
-                new("Piatra Neamt", "Sibiu", 10, 49),
-                new("Craiova", "Alba Iulia", 9, 49),
                 new("Iasi", "Slobozia", 11, 48),
                 new("Targoviste", "Vaslui", 11, 48),
-                new("Baia Mare", "Sibiu", 10, 48),
-                new("Targu Mures", "Focsani", 11, 47),
                 new("Bucuresti", "Drobeta Turnu Severin", 10, 47),
                 new("Galati", "Ramnicu Valcea", 9, 47),
                 new("Targoviste", "Deva", 9, 47),
-                new("Arad", "Sibiu", 9, 47),
-                new("Bacau", "Bistrita", 8, 47),
-                new("Oradea", "Alba Iulia", 8, 47),
                 new("Ploiesti", "Resita", 10, 46),
-                new("Constanta", "Giurgiu", 9, 46),
-                new("Targu Mures", "Satu Mare", 8, 46),
                 new("Buzau", "Sibiu", 8, 46),
                 new("Piatra Neamt", "Ramnicu Valcea", 11, 45),
                 new("Bacau", "Calarasi", 10, 45),
                 new("Craiova", "Miercurea Ciuc", 10, 45),
                 new("Pitesti", "Bistrita", 10, 45),
-                new("Oradea", "Targu Jiu", 10, 45),
                 new("Baia Mare", "Deva", 10, 45),
                 new("Ploiesti", "Drobeta Turnu Severin", 8, 45),
-                new("Brasov", "Alexandria", 8, 45),
                 new("Cluj Napoca", "Drobeta Turnu Severin", 11, 44),
                 new("Craiova", "Calarasi", 11, 44),
-                new("Iasi", "Sfantu Gheorghe", 9, 44),
-                new("Bucuresti", "Tulcea", 8, 44),
-                new("Oradea", "Bistrita", 8, 44),
-                new("Brasov", "Targu Jiu", 8, 44),
-                new("Buzau", "Vaslui", 8, 44),
-                new("Iasi", "Tulcea", 10, 43),
                 new("Craiova", "Braila", 10, 43),
                 new("Galati", "Alexandria", 10, 43),
-                new("Brasov", "Bistrita", 9, 43),
-                new("Pitesti", "Calarasi", 8, 43),
-                new("Piatra Neamt", "Alba Iulia", 11, 42),
-                new("Cluj Napoca", "Sfantu Gheorghe", 9, 42),
-                new("Bacau", "Slobozia", 9, 42),
-                new("Timisoara", "Zalau", 10, 41),
                 new("Craiova", "Slobozia", 10, 41),
                 new("Brasov", "Calarasi", 9, 41),
-                new("Arad", "Satu Mare", 9, 41),
-                new("Baia Mare", "Alba Iulia", 8, 41),
-                new("Suceava", "Zalau", 11, 40),
                 new("Targoviste", "Bistrita", 11, 40),
-                new("Galati", "Miercurea Ciuc", 10, 40),
-                new("Botosani", "Focsani", 10, 40),
-                new("Brasov", "Braila", 8, 40),
-                new("Slatina", "Deva", 8, 40),
                 new("Buzau", "Alba Iulia", 10, 39),
                 new("Sibiu", "Focsani", 10, 39),
-                new("Suceava", "Sfantu Gheorghe", 8, 39),
-                new("Pitesti", "Resita", 8, 39),
-                new("Oradea", "Resita", 10, 38),
                 new("Sibiu", "Satu Mare", 10, 38),
-                new("Arad", "Targu Jiu", 9, 38),
-                new("Brasov", "Slobozia", 8, 38),
                 new("Slatina", "Focsani", 8, 38),
                 new("Pitesti", "Zalau", 11, 37),
-                new("Baia Mare", "Miercurea Ciuc", 10, 37),
-                new("Bacau", "Tulcea", 9, 37),
                 new("Galati", "Giurgiu", 9, 37),
                 new("Craiova", "Sfantu Gheorghe", 8, 37),
                 new("Buzau", "Targu Jiu", 8, 37),
-                new("Targu Mures", "Resita", 11, 36),
                 new("Sibiu", "Alexandria", 11, 36),
-                new("Brasov", "Drobeta Turnu Severin", 10, 36),
-                new("Piatra Neamt", "Braila", 9, 36),
                 new("Slatina", "Alba Iulia", 8, 36),
-                new("Deva", "Satu Mare", 10, 35),
                 new("Pitesti", "Tulcea", 9, 35),
-                new("Targu Mures", "Drobeta Turnu Severin", 9, 35),
                 new("Buzau", "Miercurea Ciuc", 8, 35),
                 new("Piatra Neamt", "Slobozia", 11, 34),
                 new("Targoviste", "Resita", 9, 34),
                 new("Brasov", "Tulcea", 10, 33),
-                new("Vaslui", "Bistrita", 10, 32),
                 new("Slatina", "Miercurea Ciuc", 9, 32),
-                new("Galati", "Sfantu Gheorghe", 8, 32),
                 new("Ramnicu Valcea", "Alexandria", 8, 32),
-                new("Piatra Neamt", "Zalau", 11, 31),
                 new("Sibiu", "Braila", 11, 31),
                 new("Slatina", "Calarasi", 10, 31),
-                new("Focsani", "Alexandria", 9, 31),
-                new("Deva", "Bistrita", 8, 31),
-                new("Satu Mare", "Alba Iulia", 8, 31),
                 new("Sibiu", "Giurgiu", 10, 30),
                 new("Vaslui", "Calarasi", 10, 30),
-                new("Deva", "Miercurea Ciuc", 10, 30),
                 new("Focsani", "Targu Jiu", 10, 30),
-                new("Arad", "Drobeta Turnu Severin", 9, 30),
                 new("Slatina", "Braila", 9, 30),
-                new("Ramnicu Valcea", "Bistrita", 9, 30),
                 new("Targoviste", "Tulcea", 8, 30),
                 new("Piatra Neamt", "Tulcea", 11, 29),
                 new("Sibiu", "Slobozia", 11, 29),
                 new("Buzau", "Drobeta Turnu Severin", 10, 29),
-                new("Arad", "Zalau", 8, 29),
-                new("Ramnicu Valcea", "Miercurea Ciuc", 8, 29),
                 new("Slatina", "Slobozia", 9, 28),
                 new("Ramnicu Valcea", "Calarasi", 9, 28),
-                new("Sibiu", "Resita", 8, 28),
-                new("Vaslui", "Slobozia", 9, 27),
-                new("Slatina", "Resita", 8, 27),
                 new("Ramnicu Valcea", "Braila", 8, 27),
-                new("Alexandria", "Targu Jiu", 8, 27),
-                new("Botosani", "Sfantu Gheorghe", 9, 26),
-                new("Alba Iulia", "Miercurea Ciuc", 8, 26),
                 new("Alexandria", "Miercurea Ciuc", 11, 25),
-                new("Targu Jiu", "Bistrita", 10, 25),
-                new("Deva", "Resita", 8, 25),
                 new("Ramnicu Valcea", "Slobozia", 8, 25),
-                new("Focsani", "Giurgiu", 8, 25),
-                new("Targu Jiu", "Miercurea Ciuc", 11, 24),
                 new("Slatina", "Tulcea", 11, 23),
-                new("Alexandria", "Braila", 9, 23),
-                new("Vaslui", "Sfantu Gheorghe", 8, 23),
                 new("Targu Jiu", "Braila", 11, 22),
                 new("Deva", "Sfantu Gheorghe", 10, 22),
                 new("Ramnicu Valcea", "Zalau", 10, 22),
-                new("Vaslui", "Tulcea", 8, 22),
-                new("Alba Iulia", "Resita", 10, 21),
-                new("Targu Jiu", "Giurgiu", 9, 21),
                 new("Targu Jiu", "Slobozia", 11, 20),
                 new("Ramnicu Valcea", "Tulcea", 10, 20),
-                new("Miercurea Ciuc", "Braila", 10, 20),
-                new("Alba Iulia", "Drobeta Turnu Severin", 8, 20),
                 new("Miercurea Ciuc", "Giurgiu", 10, 19),
-                new("Alexandria", "Drobeta Turnu Severin", 9, 19),
                 new("Miercurea Ciuc", "Slobozia", 11, 18),
-                new("Alba Iulia", "Sfantu Gheorghe", 8, 18),
                 new("Targu Jiu", "Zalau", 11, 17),
                 new("Alexandria", "Sfantu Gheorghe", 9, 17),
-                new("Braila", "Giurgiu", 8, 17),
                 new("Alexandria", "Tulcea", 11, 16),
-                new("Targu Jiu", "Sfantu Gheorghe", 9, 16),
-                new("Miercurea Ciuc", "Zalau", 9, 15),
-                new("Bistrita", "Sfantu Gheorghe", 8, 15),
                 new("Calarasi", "Sfantu Gheorghe", 10, 13),
-                new("Giurgiu", "Drobeta Turnu Severin", 10, 13),
-                new("Braila", "Sfantu Gheorghe", 8, 12),
                 new("Giurgiu", "Sfantu Gheorghe", 8, 11),
                 new("Giurgiu", "Tulcea", 10, 10),
                 new("Slobozia", "Sfantu Gheorghe", 9, 10),
                 new("Drobeta Turnu Severin", "Sfantu Gheorghe", 11, 8),
                 new("Zalau", "Sfantu Gheorghe", 11, 7),
-                new("Sfantu Gheorghe", "Tulcea", 10, 5),
             }
         }, {
-            Category.InterRegional, new CardData[200] {
+            Category.InterRegional, new Mission[180] {
                 new("Bucuresti", "Iasi", 13, 83),
                 new("Bucuresti", "Cluj Napoca", 13, 81),
                 new("Iasi", "Cluj Napoca", 14, 80),
@@ -517,9 +269,7 @@ public static class CardConstants {
                 new("Iasi", "Targoviste", 12, 69),
                 new("Constanta", "Brasov", 12, 69),
                 new("Timisoara", "Brasov", 14, 68),
-                new("Suceava", "Oradea", 14, 68),
                 new("Iasi", "Baia Mare", 15, 67),
-                new("Craiova", "Oradea", 13, 66),
                 new("Bucuresti", "Botosani", 15, 65),
                 new("Ploiesti", "Arad", 15, 65),
                 new("Constanta", "Piatra Neamt", 15, 65),
@@ -537,19 +287,14 @@ public static class CardConstants {
                 new("Timisoara", "Buzau", 15, 61),
                 new("Craiova", "Piatra Neamt", 13, 61),
                 new("Bucuresti", "Deva", 12, 61),
-                new("Bacau", "Baia Mare", 12, 61),
                 new("Constanta", "Sibiu", 15, 60),
                 new("Oradea", "Targoviste", 15, 60),
                 new("Iasi", "Ramnicu Valcea", 14, 59),
                 new("Pitesti", "Baia Mare", 14, 59),
-                new("Oradea", "Piatra Neamt", 14, 59),
                 new("Targu Mures", "Galati", 14, 59),
                 new("Cluj Napoca", "Vaslui", 13, 59),
                 new("Constanta", "Slatina", 13, 59),
-                new("Craiova", "Arad", 12, 59),
                 new("Pitesti", "Arad", 13, 58),
-                new("Constanta", "Vaslui", 12, 58),
-                new("Suceava", "Sibiu", 12, 58),
                 new("Suceava", "Slatina", 15, 57),
                 new("Brasov", "Baia Mare", 13, 57),
                 new("Iasi", "Alba Iulia", 15, 56),
@@ -569,16 +314,12 @@ public static class CardConstants {
                 new("Targoviste", "Arad", 14, 53),
                 new("Pitesti", "Vaslui", 12, 53),
                 new("Ploiesti", "Bistrita", 12, 52),
-                new("Suceava", "Satu Mare", 12, 52),
                 new("Constanta", "Targu Jiu", 15, 51),
                 new("Timisoara", "Alexandria", 15, 51),
                 new("Bacau", "Satu Mare", 14, 51),
                 new("Targoviste", "Botosani", 13, 51),
                 new("Iasi", "Calarasi", 12, 51),
-                new("Suceava", "Alba Iulia", 12, 51),
                 new("Galati", "Sibiu", 12, 51),
-                new("Oradea", "Ramnicu Valcea", 13, 50),
-                new("Bacau", "Alba Iulia", 12, 50),
                 new("Iasi", "Giurgiu", 15, 49),
                 new("Constanta", "Miercurea Ciuc", 15, 49),
                 new("Pitesti", "Satu Mare", 14, 49),
@@ -608,8 +349,6 @@ public static class CardConstants {
                 new("Suceava", "Slobozia", 14, 43),
                 new("Bacau", "Giurgiu", 12, 43),
                 new("Oradea", "Miercurea Ciuc", 12, 43),
-                new("Piatra Neamt", "Satu Mare", 12, 43),
-                new("Arad", "Ramnicu Valcea", 12, 43),
                 new("Buzau", "Deva", 12, 43),
                 new("Botosani", "Deva", 15, 42),
                 new("Sibiu", "Vaslui", 13, 42),
@@ -624,8 +363,8 @@ public static class CardConstants {
                 new("Piatra Neamt", "Targu Jiu", 14, 40),
                 new("Targu Mures", "Braila", 14, 39),
                 new("Baia Mare", "Targu Jiu", 14, 39),
-                new("Bacau", "Zalau", 13, 39),
                 new("Botosani", "Satu Mare", 13, 39),
+                new("Bacau", "Zalau", 13, 39),
                 new("Suceava", "Tulcea", 14, 38),
                 new("Craiova", "Zalau", 14, 38),
                 new("Targu Mures", "Giurgiu", 13, 38),
@@ -633,8 +372,6 @@ public static class CardConstants {
                 new("Vaslui", "Ramnicu Valcea", 13, 38),
                 new("Targu Mures", "Slobozia", 14, 37),
                 new("Arad", "Bistrita", 13, 37),
-                new("Oradea", "Drobeta Turnu Severin", 12, 37),
-                new("Brasov", "Resita", 12, 37),
                 new("Piatra Neamt", "Calarasi", 12, 37),
                 new("Arad", "Miercurea Ciuc", 15, 36),
                 new("Buzau", "Bistrita", 14, 36),
@@ -648,7 +385,6 @@ public static class CardConstants {
                 new("Galati", "Drobeta Turnu Severin", 14, 34),
                 new("Ramnicu Valcea", "Satu Mare", 13, 34),
                 new("Slatina", "Bistrita", 12, 33),
-                new("Deva", "Alexandria", 12, 33),
                 new("Targoviste", "Zalau", 12, 32),
                 new("Botosani", "Braila", 12, 32),
                 new("Sibiu", "Calarasi", 12, 32),
@@ -657,14 +393,11 @@ public static class CardConstants {
                 new("Buzau", "Resita", 12, 30),
                 new("Satu Mare", "Targu Jiu", 14, 29),
                 new("Alba Iulia", "Alexandria", 13, 29),
-                new("Baia Mare", "Sfantu Gheorghe", 12, 29),
-                new("Focsani", "Bistrita", 12, 29),
                 new("Arad", "Sfantu Gheorghe", 15, 28),
                 new("Buzau", "Zalau", 15, 28),
                 new("Deva", "Braila", 15, 28),
                 new("Vaslui", "Giurgiu", 14, 28),
                 new("Deva", "Giurgiu", 13, 27),
-                new("Botosani", "Zalau", 12, 27),
                 new("Satu Mare", "Miercurea Ciuc", 12, 27),
                 new("Deva", "Slobozia", 15, 26),
                 new("Botosani", "Tulcea", 14, 25),
@@ -681,7 +414,6 @@ public static class CardConstants {
                 new("Focsani", "Drobeta Turnu Severin", 12, 22),
                 new("Bistrita", "Braila", 15, 21),
                 new("Miercurea Ciuc", "Calarasi", 12, 21),
-                new("Alexandria", "Resita", 12, 20),
                 new("Satu Mare", "Sfantu Gheorghe", 14, 19),
                 new("Bistrita", "Resita", 14, 18),
                 new("Alba Iulia", "Tulcea", 15, 17),
@@ -702,7 +434,7 @@ public static class CardConstants {
                 new("Drobeta Turnu Severin", "Tulcea", 15, 7),
             }
         }, {
-            Category.Long, new CardData[102] {
+            Category.Long, new Mission[102] {
                 new("Iasi", "Craiova", 16, 75),
                 new("Bucuresti", "Oradea", 18, 74),
                 new("Constanta", "Suceava", 18, 74),
@@ -807,7 +539,7 @@ public static class CardConstants {
                 new("Resita", "Tulcea", 17, 8),
             }
         }, {
-            Category.Epic, new CardData[42] {
+            Category.Epic, new Mission[42] {
                 new("Iasi", "Timisoara", 22, 78),
                 new("Cluj Napoca", "Constanta", 20, 77),
                 new("Constanta", "Timisoara", 22, 75),

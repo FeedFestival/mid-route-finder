@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Game.Shared.Interfaces;
+using Game.Shared.Interfaces.EntitySystem;
 using UnityEngine;
 
 public class RouteBetween : MonoBehaviour {
+    internal ulong ID { get; private set; }
     internal int Distance;
     internal City FromCity;
     internal City ToCity;
@@ -18,6 +20,7 @@ public class RouteBetween : MonoBehaviour {
         routeSettings? routeSettings,
         float smallestDistance
     ) {
+        ID = gameObject.GetComponent<IEntityId>().ID;
         FromCity = fromCity;
         ToCity = toCity;
 
