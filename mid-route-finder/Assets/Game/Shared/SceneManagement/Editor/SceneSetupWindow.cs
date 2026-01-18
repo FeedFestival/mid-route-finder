@@ -16,6 +16,7 @@ public class SceneSetupWindow : EditorWindow {
     readonly string[] _playgroundScenes = {
         SceneConst.SampleSceneScenePath,
         SceneConst.PlayerScenePath,
+        SceneConst.TurnPlayScenePath
     };
 
     LoadSceneParameters param = new(LoadSceneMode.Additive);

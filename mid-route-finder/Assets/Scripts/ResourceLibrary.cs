@@ -42,10 +42,10 @@ public class ResourceLibrary : ScriptableObject {
     public Material BlackWagon;
     public Material GreenWagon;
 
-    Dictionary<RouteColor, Material> _colorMaterials;
+    Dictionary<CardColor, Material> _colorMaterials;
     Dictionary<TeamColor, Material> _wagonMaterials;
 
-    public IReadOnlyDictionary<RouteColor, Material> ColorMaterials {
+    public IReadOnlyDictionary<CardColor, Material> ColorMaterials {
         get {
             if (_colorMaterials == null)
                 initializeColors();
@@ -62,15 +62,15 @@ public class ResourceLibrary : ScriptableObject {
     }
 
     void initializeColors() {
-        _colorMaterials = new Dictionary<RouteColor, Material> {
-            { RouteColor.Red, Red },
-            { RouteColor.Blue, Blue },
-            { RouteColor.Green, Green },
-            { RouteColor.Yellow, Yellow },
-            { RouteColor.Orange, Orange },
-            { RouteColor.Pink, Pink },
-            { RouteColor.Black, Black },
-            { RouteColor.White, White }
+        _colorMaterials = new Dictionary<CardColor, Material> {
+            { CardColor.Red, Red },
+            { CardColor.Blue, Blue },
+            { CardColor.Green, Green },
+            { CardColor.Yellow, Yellow },
+            { CardColor.Orange, Orange },
+            { CardColor.Pink, Pink },
+            { CardColor.Black, Black },
+            { CardColor.White, White }
         };
     }
 

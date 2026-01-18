@@ -204,8 +204,6 @@ public class CityChecker : MonoBehaviour {
 
                 if (pathCount < 4) continue;
 
-                // Debug.Log($"pathCount: {pathCount}");
-
                 if (cost < minCost) continue;
 
                 missions.Add(new(cityA, cityB, cost, maxImportancePoints - cityA.ID - cityB.ID));
@@ -215,15 +213,15 @@ public class CityChecker : MonoBehaviour {
         var sortedMissions = missions.OrderByDescending(it => it.cost).ToArray();
         var missionBank = new Dictionary<Category, Mission[]>() {
             {
-                Category.Local, CardConstants.GetCategoryMissions(sortedMissions, Category.Local)
+                Category.Local, MissionConstants.GetCategoryMissions(sortedMissions, Category.Local)
             }, {
-                Category.Regional, CardConstants.GetCategoryMissions(sortedMissions, Category.Regional)
+                Category.Regional, MissionConstants.GetCategoryMissions(sortedMissions, Category.Regional)
             }, {
-                Category.InterRegional, CardConstants.GetCategoryMissions(sortedMissions, Category.InterRegional)
+                Category.InterRegional, MissionConstants.GetCategoryMissions(sortedMissions, Category.InterRegional)
             }, {
-                Category.Long, CardConstants.GetCategoryMissions(sortedMissions, Category.Long)
+                Category.Long, MissionConstants.GetCategoryMissions(sortedMissions, Category.Long)
             }, {
-                Category.Epic, CardConstants.GetCategoryMissions(sortedMissions, Category.Epic)
+                Category.Epic, MissionConstants.GetCategoryMissions(sortedMissions, Category.Epic)
             }
         };
 
@@ -248,7 +246,8 @@ public class CityChecker : MonoBehaviour {
         // Copy to clipboard
         EditorGUIUtility.systemCopyBuffer = s;
 
-        Debug.Log($"{missionCount} possible mission were copied to clipboard! Should paste it in CardConstants MISSION_BANK Dictionary");
+        Debug.Log(
+            $"{missionCount} possible mission were copied to clipboard! Should paste it in CardConstants MISSION_BANK Dictionary");
     }
 #endif
 }

@@ -21,8 +21,7 @@ public class WagonMover : MonoBehaviour {
     public void PlaceWagons(
         RouteBetween routeBetween,
         HashSet<Wagon> coloredWagons,
-        Route route,
-        RouteColor cardColor
+        Route route
     ) {
         for (int i = 0; i < routeBetween.Distance; i++) {
             var wagon = coloredWagons.FirstOrDefault();
@@ -39,7 +38,7 @@ public class WagonMover : MonoBehaviour {
                 spatialData,
                 isLast
                     ? () => {
-                        var areRoutesEmpty = routeBetween.RemoveRoute(cardColor);
+                        var areRoutesEmpty = routeBetween.RemoveRoute(route.Color);
                         if (areRoutesEmpty)
                             routeBetween.DisableInteractions();
                         else

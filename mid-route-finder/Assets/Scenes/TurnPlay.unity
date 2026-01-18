@@ -163,12 +163,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d7bc63a888caf341bdedb32af733e08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnPlay
+  _cardDeck: {fileID: 0}
   _playerWagons: {fileID: 0}
   _cityChecker: {fileID: 0}
   _randomMissionPicking: 0
   _randomPathPickingInMission: 0
   _manualPlayByEnter: 0
-  _turnTimeSpeed: 0.0018
+  _turnTimeSpeed: 0.018
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

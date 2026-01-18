@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
 public class TurnPlay : MonoBehaviour {
+    [SerializeField] CardDeck _cardDeck;
     [SerializeField] PlayerWagons _playerWagons;
     [SerializeField] CityChecker _cityChecker;
 
@@ -19,7 +20,7 @@ public class TurnPlay : MonoBehaviour {
     [SerializeField] float _turnTimeSpeed;
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    const float DEFAULT_WAIT_TIME = 0.18f;
+    const float DEFAULT_WAIT_TIME = 0.18f; // 0.0018 - is AWESOME
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     const string GAME_SCENE = "SampleScene";
@@ -33,6 +34,8 @@ public class TurnPlay : MonoBehaviour {
     List<Mission> _missionPool;
 
     List<Player> _players;
+
+    HashSet<TeamColor> _playerDidNothing = new();
 
     IEnumerator _waitBeforeNextTurnCo;
     IEnumerator _waitBeforeResetGame;
@@ -60,10 +63,13 @@ public class TurnPlay : MonoBehaviour {
     void resetGame() {
         var go = GameObject.Find("PlayerWagons");
         _playerWagons = go.GetComponent<PlayerWagons>();
-        _playerWagons.SetTurnPlayDelegates(getPlayerPreparedCardsColor, getPlayerTeamColor);
+        _playerWagons.SetTurnPlayDelegates(getPlayer);
 
         go = GameObject.Find("CityChecker");
         _cityChecker = go.GetComponent<CityChecker>();
+
+        go = GameObject.Find("CardDeck");
+        _cardDeck = go.GetComponent<CardDeck>();
 
         // -----------------
 
@@ -81,8 +87,10 @@ public class TurnPlay : MonoBehaviour {
         _players.Add(new(TeamColor.Green));
 
         _missionPool = createMissionPool();
-        Debug.Log($"Mission Pool Created: {_missionPool.Count}");
+
         foreach (Player player in _players) {
+            _cardDeck.DrawFromDeck(4, out var cards);
+            player.IncrementCards(cards);
             assignRandomMissionsToPlayer(player);
         }
 
@@ -132,166 +140,307 @@ public class TurnPlay : MonoBehaviour {
             return;
         }
 
-        int index = player.Missions.Count - 1;
-        if (_randomMissionPicking)
-            index = Random.Range(0, player.Missions.Count);
+        if (_cardDeck.IsDiscardedEmpty) {
+            // We should try to get rid of our cards
+            player.TurnContext = tryGetTurnContextFromAllRoutesBetween(player.Cards, player.WagonCount);
 
-        var mission = player.Missions[index];
-        var hasPath = getMissionPath(mission, player.TeamColor, out List<PathTo> path);
-        if (hasPath == false) {
-            // Debug.Log($"------------------- hasPath: {hasPath}");
-            // Debug.Log($"player: {player}");
+            if (player.TurnContext.HasValue) {
+                _playerDidNothing.Remove(player.TeamColor);
+                finishTurnByPlacingWagons(player);
+            }
 
-            player.SetFailedMission(mission);
-            doTurn(player);
+            if (_playerDidNothing.Contains(player.TeamColor)) {
+                Debug.LogError(
+                    "Game seems to be ending in a draw ... as one or more players were not able to do anything in the last two turns.");
+            }
+
+            _playerDidNothing.Add(player.TeamColor);
+            Debug.LogWarning($"Player {player.TeamColor} can't do anything. He just activated DRAW MODE.");
             return;
         }
 
-        var routesBetween = getRouteBetweens(player, path, out int costToComplete);
+        if (_playerDidNothing.Contains(player.TeamColor))
+            _playerDidNothing.Remove(player.TeamColor);
 
-        if (routesBetween.Count == 0) {
-            // Debug.Log("---===---");
-            // Debug.Log($"How did this happen? mission: {mission}");
-            // var s = "";
-            // foreach (PathTo to in path) {
-            //     s += $"{to}, ";
-            // }
-            //
-            // Debug.Log($"path: {s}");
-
-            // apparently we finished with this Mission somehow
-            player.SetCompletedMission(mission);
-            doTurn(player);
+        var cardCount = player.Cards.Sum(kvp => kvp.Value);
+        if (cardCount == 0) {
+            finishTurnByPickingCards(player);
             return;
         }
 
-        var isLastRoute = routesBetween.Count == 1;
-        if (isLastRoute) {
-            // Debug.Log($"isLastRoute -> player({player.TeamColor}) ======= : {routesBetween[0].ID}");
-            index = 0;
-            player.SetCompletedMission(mission);
-        }
-        else {
-            if (_randomPathPickingInMission)
-                index = Random.Range(0, routesBetween.Count);
-            else
-                index = Math.Max(0, routesBetween.Count - 1);
+        determineColorPriorityAndCreateTurnContext(ref player);
+
+        if (!player.TurnContext.HasValue) {
+            finishTurnByPickingCards(player);
+            return;
         }
 
-        RouteBetween routeBetween = routesBetween[index];
-
-        // RouteBetween routeBetween = null;
-        // try {
-        //     routeBetween = routesBetween[index];
-        // }
-        // catch (Exception e) {
-        //     Debug.LogError($"---------------- \n Route between {index} out of range. {e}");
-        //     Debug.Log($"isLastRoute: {isLastRoute}");
-        //     Debug.Log($"player: {player}");
-        //     Debug.Break();
-        // }
-        //
-        // Debug.Log($"player({player.TeamColor}) routeBetween: {routeBetween.ID}");
-
-        // ------------------------------ This is FOW NOW ----------------------------------------------------------
-        // TODO: We should get the route by looking for cardColor, right now we define it down below
-        Route testRoute = routeBetween.Routes.FirstOrDefault(it => !it.InUse);
-
-        // TODO: This is the card that should be considered the User has used from his hand
-        var cardColor = testRoute.Color;
-
-        // ------------------------------ end FOR NOW --------------------------------------------------------------
-
-        finishTurnWithMovingWagons(player, routeBetween, cardColor);
+        finishTurnByPlacingWagons(player);
     }
 
-    void finishTurnWithMovingWagons(Player player, RouteBetween routeBetween, RouteColor cardColor) {
-        player.WagonCount -= routeBetween.Distance;
+    void determineColorPriorityAndCreateTurnContext(ref Player player) {
+        var colorMaxCost = new Dictionary<CardColor, int>();
+
+        for (int i = 0; i < player.Missions.Count; i++) {
+            var mission = player.Missions[i];
+            var hasPath = getMissionPath(mission, player.TeamColor, out List<PathTo> path);
+            if (hasPath == false) {
+                player.SetFailedMission(mission);
+            }
+
+            var routesBetween = getRouteBetweens(player, path, out int costToComplete);
+
+            if (routesBetween.Count == 0) {
+                player.SetCompletedMission(mission);
+            }
+
+            foreach (RouteBetween pathRouteBetween in routesBetween) {
+                foreach (Route route in pathRouteBetween.Routes) {
+                    if (route.InUse) // Is it really this easy?
+                        continue;
+
+                    if (route.Color != CardColor.Universal) {
+                        if (!colorMaxCost.ContainsKey(route.Color)) {
+                            colorMaxCost.Add(route.Color, pathRouteBetween.Distance);
+                            continue;
+                        }
+
+                        colorMaxCost[route.Color] += colorMaxCost[route.Color] + pathRouteBetween.Distance;
+                    }
+
+                    if (player.TurnContext.HasValue) continue;
+
+                    player.TurnContext = TurnPlay.tryCreateTurnContextFromRoute(
+                        player.Cards,
+                        route,
+                        pathRouteBetween,
+                        i,
+                        routesBetween.Count
+                    );
+                }
+            }
+        }
+
+        var cardPriority = new List<CardPriority>();
+        foreach (var kvp in colorMaxCost) {
+            cardPriority.Add(new(kvp.Key, kvp.Value));
+        }
+
+        player.SetCardPriority(cardPriority.OrderByDescending(card => card.priority).ToArray());
+    }
+
+    static TurnContext? tryCreateTurnContextFromRoute(
+        Dictionary<CardColor, int> cards,
+        Route route,
+        RouteBetween routeBetween,
+        int missionIndex = -1,
+        int routesBetweenCount = -1
+    ) {
+        bool canBuildRoute;
+        bool isRouteUniversal = route.Color == CardColor.Universal;
+        int cost = routeBetween.Distance;
+        if (isRouteUniversal) {
+            var fittingCards = cards
+                .Where(it => it.Value >= cost)
+                .OrderBy(it => it.Value).ToArray();
+
+            canBuildRoute = fittingCards.Length != 0;
+            if (!canBuildRoute) return null;
+
+            return new(
+                fittingCards[0].Key, // TODO: maybe we can try to more clever about the color we use
+                route.Color,
+                routeBetween.ID,
+                cost,
+                missionIndex,
+                routesBetweenCount
+            );
+        }
+
+        bool playerHasRouteColors = cards.TryGetValue(route.Color, out int colorCardCount);
+
+        if (!playerHasRouteColors) return null;
+
+        canBuildRoute = colorCardCount >= routeBetween.Distance;
+        if (canBuildRoute) {
+            return new(
+                route.Color,
+                route.Color,
+                routeBetween.ID,
+                cost,
+                missionIndex,
+                routesBetweenCount
+            );
+        }
+
+        return null;
+    }
+
+    void finishTurnByPickingCards(Player player) {
+        var cardPriority = player.GetCardPriority();
+
+        if (cardPriority == null || cardPriority.Length == 0) {
+            bool canDraw = _cardDeck.DrawFromDeck(2, out var cards);
+            if (!canDraw) return;
+
+            player.IncrementCards(cards);
+
+            return;
+        }
+
+        // Pick cards based on priority
+        int pickedCardsCount = 0;
+        foreach (var cp in cardPriority) {
+            if (pickedCardsCount == 2) break;
+
+            for (int i = 0; i < 2; i++) {
+                if (pickedCardsCount == 2) break;
+
+                if (_cardDeck.FaceUpCards.Contains(cp.color)) {
+                    bool canTakeMore = _cardDeck.TakeFromFaceUp(cp.color);
+                    if (!canTakeMore) return;
+
+                    player.IncrementCards(cp.color);
+                    pickedCardsCount++;
+                }
+            }
+        }
+
+        if (pickedCardsCount != 2) {
+            for (int i = pickedCardsCount; i < 2; i++) {
+                if (pickedCardsCount == 2) break;
+
+                try {
+                    var cardColor = _cardDeck.DrawFromDeck();
+                    player.IncrementCards(cardColor);
+                }
+                catch (InvalidOperationException e) {
+                    Debug.LogWarning($"We probably can't pick anymore cards as there aren't any: {e.Message}");
+                }
+
+                pickedCardsCount++;
+            }
+        }
+    }
+
+    void finishTurnByPlacingWagons(Player player) {
+        if (!player.TurnContext.HasValue) {
+            Debug.LogError(
+                $"We try to finish turn by placing wagons but we have no TurnContext for player{player.TeamColor}. How did this happen?");
+            return;
+        }
+
+        var turnContext = player.TurnContext.Value;
+
+        if (turnContext.missionIndex >= 0) {
+            var missionInProgress = player.Missions[turnContext.missionIndex];
+            var isLastRoute = turnContext.routesBetweenCount == 1;
+            if (isLastRoute) {
+                player.SetCompletedMission(missionInProgress);
+            }
+        }
+
+        player.WagonCount -= turnContext.cost;
+        _cardDeck.AddToDiscardPile(turnContext.cardColor, turnContext.cost);
+
         if (player.WagonCount <= 2) {
             // TODO: What happens if we no longer have wagons to complete a route ?
             // I guess we need to think about that
             // One thing can be, up before we pick a routeBetween. We should check if we have enough to complete it
 
-            if (_lastRoundColor.HasValue) {
-                // Someone else already activated the LAST ROUND, the first player to activate it counts
-                // Debug.Log(
-                //     $"player({player.TeamColor}): also reached a WagonCount of 2 or less, to bad he wasn't the first: {player}");
-            }
-            else {
+            if (!_lastRoundColor.HasValue) {
                 _lastRoundColor = player.TeamColor;
                 Debug.Log($"player({player.TeamColor}): ACTIVATED LAST ROUND: {player}");
             }
         }
 
         // AI needs to do this to simulate user click
-        Store2.SetFocusedID(routeBetween.ID);
+        Store2.SetFocusedID(turnContext.routeId);
 
-        player.SetCompletedRoutes(routeBetween.ID);
-        player.PreparedCardsColor = cardColor;
+        player.SetCompletedRoutes(turnContext.routeId);
 
         _playerWagons.ClickPerformed();
     }
 
     void doLastRoundTurn(Player player) {
         // It's the last round, we should check if we can finish a mission
-        RouteBetween routeBetween = null;
-        foreach (var mission in player.Missions) {
+        for (int i = 0; i < player.Missions.Count; i++) {
+            var mission = player.Missions[i];
             getMissionPath(mission, player.TeamColor, out List<PathTo> paths);
-            var routeBetweens = getRouteBetweens(player, paths, out int costToComplete);
+            var routesBetween = getRouteBetweens(player, paths, out int costToComplete);
+
+            if (routesBetween.Count == 0)
+                continue;
 
             if (costToComplete < player.WagonCount)
                 continue;
 
-            if (routeBetweens.Count == 0)
-                continue;
+            foreach (var routeBetween in routesBetween) {
+                foreach (Route route in routeBetween.Routes) {
+                    if (route.InUse) continue;
 
-            foreach (var rb in routeBetweens) {
-                if (rb.Distance == player.WagonCount) {
-                    routeBetween = rb;
-                    break;
+                    if (player.TurnContext.HasValue) break;
+
+                    player.TurnContext = TurnPlay.tryCreateTurnContextFromRoute(
+                        player.Cards,
+                        route,
+                        routeBetween,
+                        i,
+                        routesBetween.Count
+                    );
                 }
             }
 
-            if (routeBetween != null)
+            if (player.TurnContext.HasValue)
                 break;
         }
 
         // Or if we can't finish a mission, we look to find a RouteBetween to populate it with our remaining wagons
-        if (!routeBetween) {
-            var remainingRouteBetween = new List<RouteBetween>();
-            foreach (var kvp in _cityChecker.RoutesBetween) {
-                var inUse = kvp.Value.Routes.Any(it => it.InUse);
-
-                if (inUse) continue;
-
-                if (kvp.Value.Distance > player.WagonCount) continue;
-
-                remainingRouteBetween.Add(kvp.Value);
-            }
-
-            remainingRouteBetween = remainingRouteBetween.OrderByDescending(it => it.Distance).ToList();
-            routeBetween = remainingRouteBetween.FirstOrDefault();
-
-            // Debug.Break();
+        if (!player.TurnContext.HasValue) {
+            player.TurnContext = tryGetTurnContextFromAllRoutesBetween(player.Cards, player.WagonCount);
         }
 
-        if (!routeBetween) {
-            Debug.Log($"Player({player.TeamColor}) has no RouteBetween left to do right now. Game is ending?");
+        if (!player.TurnContext.HasValue) {
+            finishTurnByPickingCards(player);
             return;
         }
 
-        Debug.Log($"Player({player.TeamColor}) found a last routeBetween: {routeBetween}");
+        finishTurnByPlacingWagons(player);
+    }
 
-        // ------------------------------ This is FOW NOW ----------------------------------------------------------
-        // TODO: We should get the route by looking for cardColor, right now we define it down below
-        Route testRoute = routeBetween.Routes.FirstOrDefault(it => !it.InUse);
+    TurnContext? tryGetTurnContextFromAllRoutesBetween(Dictionary<CardColor, int> cards, int wagonCount) {
+        var remainingRoutesBetween = new List<RouteBetween>();
+        foreach (var kvp in _cityChecker.RoutesBetween) {
+            if (kvp.Value.Routes.Count == 0) continue;
 
-        // TODO: This is the card that should be considered the User has used from his hand
-        var cardColor = testRoute.Color;
+            var inUse = kvp.Value.Routes.Any(it => it.InUse);
 
-        // ------------------------------ end FOR NOW --------------------------------------------------------------
+            if (inUse) continue;
 
-        finishTurnWithMovingWagons(player, routeBetween, cardColor);
+            if (kvp.Value.Distance > wagonCount) continue;
+
+            remainingRoutesBetween.Add(kvp.Value);
+        }
+
+        remainingRoutesBetween = remainingRoutesBetween.OrderByDescending(it => it.Distance).ToList();
+
+        foreach (var routeBetween in remainingRoutesBetween) {
+            foreach (Route route in routeBetween.Routes) {
+                if (route.InUse) // Is it really this easy?
+                    continue;
+
+                var context = TurnPlay.tryCreateTurnContextFromRoute(
+                    cards,
+                    route,
+                    routeBetween
+                );
+
+                if (context.HasValue)
+                    return context;
+            }
+        }
+
+        return null;
     }
 
     List<RouteBetween> getRouteBetweens(Player player, List<PathTo> path, out int costToComplete) {
@@ -304,11 +453,7 @@ public class TurnPlay : MonoBehaviour {
 
             costToComplete += pathTo.cost;
 
-            if (player.WagonCount < pathTo.cost) {
-                // Debug.Log($"player{player.TeamColor} can't do this {pathTo}");
-                // Debug.Log($"player.WagonCount: {player.WagonCount} < {pathTo.cost}");
-                continue;
-            }
+            if (player.WagonCount < pathTo.cost) continue;
 
             routesBetween.Add(_cityChecker.RoutesBetween[pathTo.routeBetweenID]);
         }
@@ -318,14 +463,14 @@ public class TurnPlay : MonoBehaviour {
 
     List<Mission> createMissionPool() {
         var missionPool = new List<Mission>();
-        foreach (var kvp in CardConstants.MISSION_CARD_COUNT) {
+        foreach (var kvp in MissionConstants.MISSION_CARD_COUNT) {
             var category = kvp.Key;
             int drawCount = kvp.Value;
 
-            var availableMissions = new List<Mission>(CardConstants.MISSION_BANK[category]);
+            var availableMissions = new List<Mission>(MissionConstants.MISSION_BANK[category]);
 
             for (int i = 0; i < drawCount && availableMissions.Count > 0; i++) {
-                missionPool.Add(CardConstants.DrawWeighted(ref availableMissions));
+                missionPool.Add(MissionConstants.DrawWeighted(ref availableMissions));
             }
         }
 
@@ -339,8 +484,6 @@ public class TurnPlay : MonoBehaviour {
         getRandomMissionFromPool(ref missions);
         getRandomMissionFromPool(ref missions);
 
-        Debug.Log($"Player picked 3 more missions. Mission pool count is {_missionPool.Count}");
-
         player.SetMissions(missions);
     }
 
@@ -348,14 +491,12 @@ public class TurnPlay : MonoBehaviour {
         var index = Random.Range(0, _missionPool.Count);
         var randomMission = _missionPool[index];
 
-        // Debug.Log($"randomMission was picked: {randomMission}");
         missions.Add(randomMission);
         _missionPool.RemoveAt(index);
     }
 
-    RouteColor getPlayerPreparedCardsColor() {
-        var player = _players[_roundTurnIndex];
-        return player.PreparedCardsColor;
+    Player getPlayer() {
+        return _players[_roundTurnIndex];
     }
 
     TeamColor getPlayerTeamColor() {
@@ -394,6 +535,10 @@ public class TurnPlay : MonoBehaviour {
 
             AsyncOperation loadOp = SceneManager.LoadSceneAsync(GAME_SCENE, LoadSceneMode.Additive);
             yield return loadOp;
+
+
+            Scene loadedScene = SceneManager.GetSceneByName(GAME_SCENE);
+            SceneManager.SetActiveScene(loadedScene);
 
             yield return new WaitForSeconds(DEFAULT_WAIT_TIME);
 

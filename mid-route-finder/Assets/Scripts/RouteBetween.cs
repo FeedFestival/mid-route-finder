@@ -33,8 +33,8 @@ public class RouteBetween : MonoBehaviour {
         Vector3 dir = (to - from).normalized;
         float xScale = 1;
 
-        var color = routeSettings?.Color ?? RouteColor.Gray;
-        string colorName = color == RouteColor.Gray ? "default" : color.ToString();
+        var color = routeSettings?.Color ?? CardColor.Universal;
+        string colorName = color == CardColor.Universal ? "default" : color.ToString();
         var routeGo = new GameObject($"Route {colorName}");
         routeGo.transform.parent = transform;
         Vector3 routePos = Vector3.Lerp(from, to, 0.5f);
@@ -78,7 +78,7 @@ public class RouteBetween : MonoBehaviour {
         focusTrigger?.Enable();
     }
 
-    public bool RemoveRoute(RouteColor color) {
+    public bool RemoveRoute(CardColor color) {
         Route route = Routes.Find(it => it.Color == color);
         Routes.Remove(route);
         Destroy(route.gameObject);

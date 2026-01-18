@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 
 public class Route : MonoBehaviour {
-    internal RouteColor Color;
+    internal CardColor Color;
     GameObject[] _placeholders;
     public bool InUse;
 
@@ -68,7 +68,7 @@ public class Route : MonoBehaviour {
                enforcedPlaceholderSizeRatio.Value;
     }
 
-    public void ApplySettings(routeSettings routeSettings, RouteColor? routeColor = null) {
+    public void ApplySettings(routeSettings routeSettings, CardColor? routeColor = null) {
         if (!routeColor.HasValue) {
             routeColor = routeSettings.Color;
         }
@@ -87,7 +87,7 @@ public class Route : MonoBehaviour {
 
         // size is 80%
 
-        if (routeColor != RouteColor.Gray) {
+        if (routeColor != CardColor.Universal) {
             foreach (var placeholder in _placeholders) {
                 var renderer = placeholder.GetComponent<Renderer>();
                 renderer.material = ResourceLibrary._.ColorMaterials[routeColor.Value];

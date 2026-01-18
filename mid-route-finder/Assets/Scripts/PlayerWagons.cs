@@ -39,8 +39,7 @@ public class PlayerWagons : MonoBehaviour {
     int _currentWagonIndex;
     int _readyTeams;
     int _maxTeams = 5;
-    Func<RouteColor> _getPlayerPreparedCardsColor;
-    Func<TeamColor> _getPlayerTeamColor;
+    Func<Player> _getPlayer;
 
     void Awake() {
         _wagonsTs = new();
@@ -123,41 +122,68 @@ public class PlayerWagons : MonoBehaviour {
 #endif
 
     internal void SetTurnPlayDelegates(
-        Func<RouteColor> getPlayerPreparedCardsColor,
-        Func<TeamColor> getPlayerTeamColor
+        Func<Player> getPlayer
     ) {
-        _getPlayerPreparedCardsColor = getPlayerPreparedCardsColor;
-        _getPlayerTeamColor = getPlayerTeamColor;
+        _getPlayer = getPlayer;
     }
 
     internal void ClickPerformed() {
         var entityId = Store2.State.FocusedID.CurrentValue;
         if (entityId == 0) return;
 
-        var cardColor = _getPlayerPreparedCardsColor();
+        var player = _getPlayer();
+        if (!player.TurnContext.HasValue) {
+            Debug.LogError($"player{player.TeamColor} has no TurnContext. What happened?");
+            return;
+        }
+
+        var turnContext = player.TurnContext.Value;
+
         var routeBetween = _cityChecker.RoutesBetween[entityId];
 
-        Route route = routeBetween.Routes.Find(it => it.Color == cardColor && !it.InUse);
+        Route route = routeBetween.Routes.Find(it => it.Color == turnContext.routeColor && !it.InUse);
         if (!route) {
             Debug.LogError(
                 $"You selected a RouteBetween {routeBetween.gameObject.name} that has no more Routes. How did this happen?");
             return;
         }
 
+        // Check if the player has what it needs
+        bool isUniversal = route.Color == CardColor.Universal;
+        if (!isUniversal && turnContext.cardColor != route.Color) {
+            Debug.LogError(
+                $"Player uses a card colored {turnContext.cardColor} that can't be used on the route {route.Color}");
+            return;
+        }
+
+        int routeCost = routeBetween.Distance;
+        if (player.Cards[turnContext.cardColor] < routeCost) {
+            Debug.LogWarning(
+                $"Player has the right route color {route.Color} but he doesn't have enough cards [{player.Cards[route.Color]}] < {routeCost}");
+            return;
+        }
+
+        // => Everything is fine, we can proceed with placing wagons
+
+        player.Cards[turnContext.cardColor] -= routeCost;
+        player.TurnContext = null;
+
+        // --
+
         route.InUse = true;
-        var userColor = _getPlayerTeamColor();
+        var playerTeamColor = player.TeamColor;
         var isRouteBlocked = routeBetween.Routes.Where(it => !it.InUse).Count() == 0;
         if (isRouteBlocked) {
             Store2.SetFocusedID(0);
             Store2.SetFocusedInstanceID(-1);
-            _cityChecker.DisableCityPath(routeBetween.FromCity.ID, routeBetween.ToCity.ID, userColor);
+            _cityChecker.DisableCityPath(routeBetween.FromCity.ID, routeBetween.ToCity.ID, playerTeamColor);
             routeBetween.DisableInteractions();
         }
         else {
             // TODO: modify _cityChecker -> City Paths -> To know what colors are on them
         }
 
-        var userWagons = _wagons[userColor];
+        var userWagons = _wagons[playerTeamColor];
         if (userWagons == null || userWagons.Count == 0) {
             Debug.LogError("Couldn't find any more wagons. I guess you won.");
             return;
@@ -170,7 +196,7 @@ public class PlayerWagons : MonoBehaviour {
             userWagons.Remove(wagon);
         }
 
-        _wagonMover.PlaceWagons(routeBetween, coloredWagons, route, cardColor);
+        _wagonMover.PlaceWagons(routeBetween, coloredWagons, route);
     }
 
     void onWagonReady(IFallingWagon fallingWagon) {
