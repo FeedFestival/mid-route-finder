@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UIElements;
 using CITY = CityConstants;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -124,8 +123,8 @@ public class RouteConstants : MonoBehaviour {
                 }, {
                     CITY.GIURGIU, new() {
                         TwoWay = true,
-                        Color = RouteColor.Orange,
-                        SecondColor = RouteColor.Pink
+                        Color = CardColor.Orange,
+                        SecondColor = CardColor.Pink
                     }
 
                     // }, {
@@ -134,18 +133,18 @@ public class RouteConstants : MonoBehaviour {
                     //     }
                 }, {
                     CITY.ALEXANDRIA, new() {
-                        Color = RouteColor.Red,
+                        Color = CardColor.Red,
                     }
                 }, {
                     CITY.SLOBOZIA, new() {
                         EnforcedLength = 3,
                         TwoWay = true,
-                        Color = RouteColor.Blue,
-                        SecondColor = RouteColor.Yellow
+                        Color = CardColor.Blue,
+                        SecondColor = CardColor.Yellow
                     }
                 }, {
                     CITY.TARGOVISTE, new() {
-                        Color = RouteColor.Green,
+                        Color = CardColor.Green,
                     }
                 },
             }
@@ -157,12 +156,12 @@ public class RouteConstants : MonoBehaviour {
                 {
                     CITY.VASLUI, new() {
                         TwoWay = true,
-                        Color = RouteColor.Yellow,
-                        SecondColor = RouteColor.Red,
+                        Color = CardColor.Yellow,
+                        SecondColor = CardColor.Red,
                     }
                 }, {
                     CITY.BACAU, new() {
-                        Color = RouteColor.Blue,
+                        Color = CardColor.Blue,
                     }
                 },
             }
@@ -195,13 +194,13 @@ public class RouteConstants : MonoBehaviour {
                     CITY.ZALAU, new() {
                         EnforcedLength = 2,
                         TwoWay = true,
-                        Color = RouteColor.Black,
-                        SecondColor = RouteColor.Blue,
+                        Color = CardColor.Black,
+                        SecondColor = CardColor.Blue,
                     }
                 }, {
                     CITY.DEVA, new() {
                         EnforcedLength = 6,
-                        Color = RouteColor.Red,
+                        Color = CardColor.Red,
                     }
                 }, {
                     CITY.BISTRITA, new() {
@@ -211,7 +210,7 @@ public class RouteConstants : MonoBehaviour {
                 }, {
                     CITY.ALBA_IULIA, new() {
                         EnforcedLength = 3,
-                        Color = RouteColor.Yellow,
+                        Color = CardColor.Yellow,
                     }
                 }
             }
@@ -222,15 +221,15 @@ public class RouteConstants : MonoBehaviour {
             CITY.CONSTANTA, new() {
                 {
                     CITY.CALARASI, new() {
-                        Color = RouteColor.Red
+                        Color = CardColor.Red
                     }
                 }, {
                     CITY.SLOBOZIA, new() {
-                        Color = RouteColor.Blue
+                        Color = CardColor.Blue
                     }
                 }, {
                     CITY.TULCEA, new() {
-                        Color = RouteColor.Pink
+                        Color = CardColor.Pink
                     }
                 }
             }
@@ -242,11 +241,10 @@ public class RouteConstants : MonoBehaviour {
                 {
                     CITY.DEVA, new() {
                         TwoWay = true,
-                        Color = RouteColor.White,
-                        SecondColor = RouteColor.Orange
+                        Color = CardColor.White,
+                        SecondColor = CardColor.Orange
                     }
-                },
-                {
+                }, {
                     CITY.ARAD, new() {
                         TwoWay = true,
                     }
@@ -260,8 +258,8 @@ public class RouteConstants : MonoBehaviour {
                 {
                     CITY.BISTRITA, new() {
                         TwoWay = true,
-                        Color = RouteColor.Black,
-                        SecondColor = RouteColor.Pink
+                        Color = CardColor.Black,
+                        SecondColor = CardColor.Pink
                     }
                 }
             }
@@ -273,14 +271,14 @@ public class RouteConstants : MonoBehaviour {
                 {
                     CITY.VASLUI, new() {
                         TwoWay = true,
-                        Color = RouteColor.Green,
-                        SecondColor = RouteColor.White
+                        Color = CardColor.Green,
+                        SecondColor = CardColor.White
                     }
                 }, {
                     CITY.MIERCUREA_CIUC, new() {
                         TwoWay = true,
-                        Color = RouteColor.Orange,
-                        SecondColor = RouteColor.Black
+                        Color = CardColor.Orange,
+                        SecondColor = CardColor.Black
                     }
                 }
             }
@@ -291,11 +289,11 @@ public class RouteConstants : MonoBehaviour {
             CITY.CRAIOVA, new() {
                 {
                     CITY.ALEXANDRIA, new() {
-                        Color = RouteColor.Black
+                        Color = CardColor.Black
                     }
                 }, {
                     CITY.RAMNICU_VALCEA, new() {
-                        Color = RouteColor.Yellow
+                        Color = CardColor.Yellow
                     }
                 }
             }
@@ -328,16 +326,16 @@ public class RouteConstants : MonoBehaviour {
                 {
                     CITY.ARAD, new() {
                         TwoWay = true,
-                        Color = RouteColor.Green,
-                        SecondColor = RouteColor.Pink,
+                        Color = CardColor.Green,
+                        SecondColor = CardColor.Pink,
                     }
                 }, {
                     CITY.DEVA, new() {
-                        Color = RouteColor.Blue,
+                        Color = CardColor.Blue,
                     }
                 }, {
                     CITY.ZALAU, new() {
-                        Color = RouteColor.White,
+                        Color = CardColor.White,
                     }
                 },
             }
@@ -348,7 +346,7 @@ public class RouteConstants : MonoBehaviour {
             CITY.BRASOV, new() {
                 {
                     CITY.RAMNICU_VALCEA, new() {
-                        Color = RouteColor.Blue,
+                        Color = CardColor.Blue,
                     }
                 }, {
                     CITY.SFANTU_GHEORGHE, new() {
@@ -365,17 +363,17 @@ public class RouteConstants : MonoBehaviour {
                 {
                     CITY.MIERCUREA_CIUC, new() {
                         EnforcedLength = 4,
-                        Color = RouteColor.Green
+                        Color = CardColor.Green
                     }
                 }, {
                     CITY.ALBA_IULIA, new() {
                         TwoWay = true,
-                        Color = RouteColor.Black,
-                        SecondColor = RouteColor.Orange,
+                        Color = CardColor.Black,
+                        SecondColor = CardColor.Orange,
                     }
                 }, {
                     CITY.SIBIU, new() {
-                        Color = RouteColor.Pink,
+                        Color = CardColor.Pink,
                     }
                 }
             }
@@ -391,12 +389,12 @@ public class RouteConstants : MonoBehaviour {
                 }, {
                     CITY.TULCEA, new() {
                         TwoWay = true,
-                        Color = RouteColor.Orange,
-                        SecondColor = RouteColor.Black,
+                        Color = CardColor.Orange,
+                        SecondColor = CardColor.Black,
                     }
                 }, {
                     CITY.VASLUI, new() {
-                        Color = RouteColor.White,
+                        Color = CardColor.White,
                     }
                 },
             }
@@ -409,15 +407,15 @@ public class RouteConstants : MonoBehaviour {
                     CITY.BISTRITA, new() {
                         EnforcedLength = 6,
                         TwoWay = true,
-                        Color = RouteColor.Yellow,
-                        SecondColor = RouteColor.Orange,
+                        Color = CardColor.Yellow,
+                        SecondColor = CardColor.Orange,
                     }
                 }, {
                     CITY.BOTOSANI, new() {
                         EnforcedLength = 4,
                         TwoWay = true,
-                        Color = RouteColor.Red,
-                        SecondColor = RouteColor.Blue,
+                        Color = CardColor.Red,
+                        SecondColor = CardColor.Blue,
                     }
                 }, {
                     CITY.MIERCUREA_CIUC, new() {
@@ -434,8 +432,7 @@ public class RouteConstants : MonoBehaviour {
                     CITY.BISTRITA, new() {
                         TwoWay = true
                     }
-                },
-                {
+                }, {
                     CITY.SATU_MARE, new() {
                         TwoWay = true
                     }
@@ -448,7 +445,7 @@ public class RouteConstants : MonoBehaviour {
             CITY.BUZAU, new() {
                 {
                     CITY.BRAILA, new() {
-                        Color = RouteColor.Black
+                        Color = CardColor.Black
                     }
                 }, {
                     CITY.FOCSANI, new() {
@@ -456,7 +453,7 @@ public class RouteConstants : MonoBehaviour {
                     }
                 }, {
                     CITY.SLOBOZIA, new() {
-                        Color = RouteColor.Pink
+                        Color = CardColor.Pink
                     }
                 },
             }
@@ -467,7 +464,7 @@ public class RouteConstants : MonoBehaviour {
             CITY.SIBIU, new() {
                 {
                     CITY.TARGU_JIU, new() {
-                        Color = RouteColor.White
+                        Color = CardColor.White
                     }
                 },
             }
@@ -478,7 +475,7 @@ public class RouteConstants : MonoBehaviour {
             CITY.RAMNICU_VALCEA, new() {
                 {
                     CITY.TARGU_JIU, new() {
-                        Color = RouteColor.Red,
+                        Color = CardColor.Red,
                     }
                 }
             }
@@ -490,7 +487,7 @@ public class RouteConstants : MonoBehaviour {
                 {
                     CITY.SFANTU_GHEORGHE, new() {
                         EnforcedLength = 5,
-                        Color = RouteColor.Yellow,
+                        Color = CardColor.Yellow,
                     }
                 }
             }
@@ -501,7 +498,7 @@ public class RouteConstants : MonoBehaviour {
             CITY.SATU_MARE, new() {
                 {
                     CITY.ZALAU, new() {
-                        Color = RouteColor.Orange,
+                        Color = CardColor.Orange,
                     }
                 }
             }
@@ -526,13 +523,13 @@ public class RouteConstants : MonoBehaviour {
                     CITY.ZALAU, new() {
                         EnforcedLength = 5,
                         TwoWay = true,
-                        Color = RouteColor.Green,
-                        SecondColor = RouteColor.Red
+                        Color = CardColor.Green,
+                        SecondColor = CardColor.Red
                     }
                 }, {
                     CITY.MIERCUREA_CIUC, new() {
                         EnforcedLength = 6,
-                        Color = RouteColor.White,
+                        Color = CardColor.White,
                     }
                 }
             }
@@ -544,8 +541,8 @@ public class RouteConstants : MonoBehaviour {
                 {
                     CITY.SFANTU_GHEORGHE, new() {
                         TwoWay = true,
-                        Color = RouteColor.Green,
-                        SecondColor = RouteColor.White,
+                        Color = CardColor.Green,
+                        SecondColor = CardColor.White,
                     }
                 }
             }
@@ -557,7 +554,7 @@ public class RouteConstants : MonoBehaviour {
                 {
                     CITY.GIURGIU, new() {
                         EnforcedLength = 6,
-                        Color = RouteColor.Green
+                        Color = CardColor.Green
                     }
                 }, { // Calarasi -> Slobozia
                     CITY.SLOBOZIA, new() {
@@ -584,8 +581,8 @@ public class RouteConstants : MonoBehaviour {
                 {
                     CITY.DROBETA_TURNU_SEVERIN, new() {
                         TwoWay = true,
-                        Color = RouteColor.Yellow,
-                        SecondColor = RouteColor.Pink
+                        Color = CardColor.Yellow,
+                        SecondColor = CardColor.Pink
                     }
                 },
             }
@@ -593,8 +590,8 @@ public class RouteConstants : MonoBehaviour {
     };
 }
 
-public enum RouteColor {
-    Gray,
+public enum CardColor {
+    Universal,
     Red,
     Blue,
     Green,
@@ -618,6 +615,6 @@ public struct routeSettings {
     public bool TwoWay;
     public float? EnforcedPlaceholderSizeRatio;
     public int EnforcedLength;
-    public RouteColor Color;
-    public RouteColor? SecondColor;
+    public CardColor Color;
+    public CardColor? SecondColor;
 }

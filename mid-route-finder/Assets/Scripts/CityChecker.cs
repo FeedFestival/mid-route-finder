@@ -1,7 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using Game.Shared.Interfaces.EntitySystem;
 using Sirenix.OdinInspector;
+using UnityEditor;
 using UnityEngine;
 
 public class CityChecker : MonoBehaviour {
@@ -12,108 +13,75 @@ public class CityChecker : MonoBehaviour {
     Transform _cityVisualizerT;
     Transform _routesT;
 
-    List<City> _cities;
-    List<routeData> _routesBetween;
+    internal List<City> Cities;
+    internal Dictionary<ulong, RouteBetween> RoutesBetween { get; private set; }
+
+    public void DisableCityPath(int fromCityID, int toCityID, TeamColor color) {
+        var fromCity = Cities.Find(it => it.ID == fromCityID);
+        var toCity = Cities.Find(it => it.ID == toCityID);
+
+        int index = fromCity.Paths.FindIndex(it => it.to.ID == toCity.ID);
+        var path = fromCity.Paths[index];
+        var modifiedPath = new PathTo(path, color, false);
+        fromCity.Paths.RemoveAt(index);
+        fromCity.Paths.Add(modifiedPath);
+
+        index = toCity.Paths.FindIndex(it => it.to.ID == fromCity.ID);
+        path = toCity.Paths[index];
+        modifiedPath = new PathTo(path, color, false);
+        toCity.Paths.RemoveAt(index);
+        toCity.Paths.Add(modifiedPath);
+    }
 
     void Awake() {
-        clearData();
+        var routesData = loadCitiesAndCreateRoutesData();
+        drawRouteBetween(routesData);
     }
 
-    void Start() {
-        drawRouteBetween();
-    }
-
-    void OnDestroy() {
-        clearData();
-    }
-
-    [Button]
-    void clearData() {
-        _cities = null;
-        _routesBetween = null;
-
-        if (Application.isPlaying) {
-            if (_cityVisualizerT != null)
-                Destroy(_cityVisualizerT.gameObject);
-
-            if (_routesT != null)
-                Destroy(_routesT.gameObject);
-        }
-        else {
-            if (_cityVisualizerT != null)
-                DestroyImmediate(_cityVisualizerT.gameObject);
-
-            if (_routesT != null)
-                DestroyImmediate(_routesT.gameObject);
-        }
-    }
-
-    [Button]
-    void copyCityJsonToClipboard() {
-        clearData();
-        tryLoadInCities();
-
-        string json = string.Empty;
-        foreach (City city in _cities) {
-            json += $"{city}, \n";
-        }
-
-        Debug.Log("Cities Copied to clipboard");
-        GUIUtility.systemCopyBuffer = json;
-    }
-
-    [Button]
-    void drawRouteBetween() {
-        clearData();
-        tryLoadInCities();
-
+    void drawRouteBetween(List<RouteData> routesData) {
         if (_routesT == null)
             _routesT = new GameObject("_routesT").transform;
 
+        RoutesBetween = new();
         float smallestDistance = ResourceLibrary._.WagonPlaceholderPrefab.transform.localScale.z;
 
-        foreach (routeData routeData in _routesBetween) {
+        foreach (RouteData routeData in routesData) {
             var routeGo = Instantiate(ResourceLibrary._.RouteBetweenPrefab, Vector3.zero, Quaternion.identity,
                 _routesT);
             var routeBetween = routeGo.GetComponent<RouteBetween>();
-            var fromCity = _cities.Find(it => it.Name == routeData.FromCityName);
-
-            // TODO: make them neighbors
-            var toCity = _cities.Find(it => it.Name == routeData.ToCityName);
-
-            // TODO: make them neighbors
-
-            routeSettings? routeSettings = tryGetRouteSettings(routeData.FromCityName, routeData.ToCityName);
+            var fromCity = Cities.Find(it => it.Name == routeData.fromCityName);
+            var toCity = Cities.Find(it => it.Name == routeData.toCityName);
+            routeSettings? routeSettings = tryGetRouteSettings(routeData.fromCityName, routeData.toCityName);
 
             routeBetween.InitializeFromData(
-                routeData.Distance,
+                routeData.distance,
                 fromCity,
                 toCity,
                 routeSettings,
                 smallestDistance
             );
+
+            if (fromCity.Paths == null)
+                fromCity.Paths = new();
+            fromCity.Paths.Add(new(toCity, routeBetween.ID, routeBetween.Distance));
+
+            if (toCity.Paths == null)
+                toCity.Paths = new();
+            toCity.Paths.Add(new(fromCity, routeBetween.ID, routeBetween.Distance));
+
+            RoutesBetween.Add(routeBetween.GetComponent<IEntityId>().ID, routeBetween);
         }
     }
 
-    [Button]
-    void drawCityVisualizer() {
-        if (_cities == null)
-            tryLoadInCities();
-
-        if (_cities == null) {
-            Debug.LogError("No cities found");
-        }
-    }
-
-    void tryLoadInCities() {
-        _cities = new();
+    List<RouteData> loadCitiesAndCreateRoutesData() {
+        Cities = new();
 
         if (_cityVisualizerT == null)
             _cityVisualizerT = new GameObject("_cityVisualizerT").transform;
 
         var usedRoutes = new HashSet<(int, int)>();
         var allowedIds = new List<int>();
-        _routesBetween = new();
+        List<RouteData> routesData = new();
         int id = 99;
 
         foreach (Transform childT in _citiesT) {
@@ -122,7 +90,7 @@ public class CityChecker : MonoBehaviour {
             var city = cityGo.GetComponent<City>();
             city.Init(childT.gameObject);
 
-            var cityRoutes = new List<routeData>();
+            var cityRoutes = new List<RouteData>();
 
             foreach (Transform otherChildT in _citiesT) {
                 if (childT.gameObject.name == otherChildT.gameObject.name) {
@@ -136,43 +104,45 @@ public class CityChecker : MonoBehaviour {
                 int b = Mathf.Max(city.ID, otherCity.id);
 
                 float dist = Vector3.Distance(childT.position, otherChildT.position);
-                var route = new routeData(id, dist, city.Name, otherCity.name);
+                var route = new RouteData(id, dist, city.Name, otherCity.name);
                 cityRoutes.Add(route);
 
                 if (usedRoutes.Contains((a, b)))
                     continue;
 
-                _routesBetween.Add(route);
+                routesData.Add(route);
                 usedRoutes.Add((a, b));
             }
 
             var routesIds = cityRoutes
-                .OrderBy(r => r.Distance)
+                .OrderBy(r => r.distance)
                 .Take(city.MaxConnections)
-                .Select(r => r.ID)
+                .Select(r => r.id)
                 .ToArray();
 
             allowedIds.AddRange(routesIds);
 
-            _cities.Add(city);
+            Cities.Add(city);
         }
 
-        _routesBetween = _routesBetween
-            .Where(r => allowedIds.Contains(r.ID))
+        routesData = routesData
+            .Where(r => allowedIds.Contains(r.id))
             .Where(it => {
-                bool isFromCity = RouteConstants.BANNED_ROUTES.ContainsKey(it.FromCityName);
-                bool isToCity = isFromCity && RouteConstants.BANNED_ROUTES[it.FromCityName].Contains(it.ToCityName);
+                bool isFromCity = RouteConstants.BANNED_ROUTES.ContainsKey(it.fromCityName);
+                bool isToCity = isFromCity && RouteConstants.BANNED_ROUTES[it.fromCityName].Contains(it.toCityName);
                 return !(isFromCity && isToCity);
             })
             .ToList();
 
         foreach (var requiredRoute in RouteConstants.REQUIRED_ROUTES) {
             id++;
-            var fromCity = _cities.Find(it => it.Name == requiredRoute.FromCityName);
-            var toCity = _cities.Find(it => it.Name == requiredRoute.ToCityName);
+            var fromCity = Cities.Find(it => it.Name == requiredRoute.FromCityName);
+            var toCity = Cities.Find(it => it.Name == requiredRoute.ToCityName);
             float dist = Vector3.Distance(fromCity.transform.position, toCity.transform.position);
-            _routesBetween.Add(new routeData(id, dist, requiredRoute.FromCityName, requiredRoute.ToCityName));
+            routesData.Add(new RouteData(id, dist, requiredRoute.FromCityName, requiredRoute.ToCityName));
         }
+
+        return routesData;
     }
 
     routeSettings? tryGetRouteSettings(string fromName, string toName) {
@@ -183,4 +153,101 @@ public class CityChecker : MonoBehaviour {
 
         return RouteConstants.ROUTES_SETTINGS[fromName][toName];
     }
+
+#if UNITY_EDITOR
+    [Title("Play Mode Debug", "Method that can run in PlayMode")]
+    [Button]
+    void copyCityJsonToClipboard() {
+        if (!Application.isPlaying) return;
+
+        string json = string.Empty;
+        foreach (City city in Cities) {
+            json += $"{city}, \n";
+        }
+
+        Debug.Log("Cities Copied to clipboard");
+        GUIUtility.systemCopyBuffer = json;
+    }
+
+    [ButtonGroup]
+    void findShortestPathTest() {
+        if (!Application.isPlaying) return;
+
+        var fromCity = Cities.Find(it => it.Name == "Arad");
+        var toCity = Cities.Find(it => it.Name == "Constanta");
+
+        var hasPath = Pathfinding.FindShortestPath(fromCity, toCity, out List<City> shortestPath, out int totalCost);
+
+        if (!hasPath)
+            Debug.Log("No path found");
+    }
+
+    [ButtonGroup]
+    void calculateAllPossibleMissions() {
+        if (!Application.isPlaying) return;
+
+        HashSet<Mission> missions = new();
+
+        int minCost = 4;
+        int maxImportancePoints = (Cities.Count * 2) + 2;
+        foreach (City cityA in Cities) {
+            foreach (City cityB in Cities) {
+                if (cityA.ID == cityB.ID) continue;
+
+                Pathfinding.FindShortestPath(cityA, cityB, out List<City> cities, out int cost);
+
+                int pathCount = 0;
+                foreach (City city in cities) {
+                    if (city.ID != cityA.ID)
+                        pathCount++;
+                }
+
+                if (pathCount < 4) continue;
+
+                if (cost < minCost) continue;
+
+                missions.Add(new(cityA, cityB, cost, maxImportancePoints - cityA.ID - cityB.ID));
+            }
+        }
+
+        var sortedMissions = missions.OrderByDescending(it => it.cost).ToArray();
+        var missionBank = new Dictionary<Category, Mission[]>() {
+            {
+                Category.Local, MissionConstants.GetCategoryMissions(sortedMissions, Category.Local)
+            }, {
+                Category.Regional, MissionConstants.GetCategoryMissions(sortedMissions, Category.Regional)
+            }, {
+                Category.InterRegional, MissionConstants.GetCategoryMissions(sortedMissions, Category.InterRegional)
+            }, {
+                Category.Long, MissionConstants.GetCategoryMissions(sortedMissions, Category.Long)
+            }, {
+                Category.Epic, MissionConstants.GetCategoryMissions(sortedMissions, Category.Epic)
+            }
+        };
+
+        int missionCount = 0;
+        string s = string.Empty;
+        foreach (var kvp in missionBank) {
+            var category = kvp.Key;
+            var categoryMissions = kvp.Value;
+            s += $@"{{
+    Category.{category.ToString()}, new Mission[{categoryMissions.Length}] {{";
+            foreach (Mission mission in categoryMissions) {
+                missionCount++;
+                s += $@"
+        new(""{mission.cityA}"", ""{mission.cityB}"", {mission.cost}, {mission.importancePoints}),";
+            }
+
+            s += $@"
+    }}
+}},";
+        }
+
+        // Copy to clipboard
+        EditorGUIUtility.systemCopyBuffer = s;
+
+        Debug.Log(
+            $"{missionCount} possible mission were copied to clipboard! Should paste it in CardConstants MISSION_BANK Dictionary");
+    }
+#endif
 }

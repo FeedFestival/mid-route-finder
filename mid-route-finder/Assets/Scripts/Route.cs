@@ -1,8 +1,11 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 public class Route : MonoBehaviour {
+    internal CardColor Color;
     GameObject[] _placeholders;
+    public bool InUse;
 
     public void Init(
         int wagonsCount,
@@ -51,6 +54,10 @@ public class Route : MonoBehaviour {
         }
     }
 
+    public SpatialData GetPlaceholderSpatialDataAt(int index) {
+        return new SpatialData(_placeholders[index].transform.position, _placeholders[index].transform.rotation);
+    }
+
     static float getSegmentLength(int wagonsCount, Vector3 from, Vector3 to, float? enforcedPlaceholderSizeRatio) {
         if (!enforcedPlaceholderSizeRatio.HasValue) {
             float totalDistance = Vector3.Distance(from, to);
@@ -61,11 +68,12 @@ public class Route : MonoBehaviour {
                enforcedPlaceholderSizeRatio.Value;
     }
 
-    public void ApplySettings(routeSettings routeSettings, RouteColor? routeColor = null) {
+    public void ApplySettings(routeSettings routeSettings, CardColor? routeColor = null) {
         if (!routeColor.HasValue) {
             routeColor = routeSettings.Color;
         }
 
+        Color = routeColor.Value;
         gameObject.name = $"Route {routeColor.ToString()}";
 
         if (_placeholders == null) {
@@ -79,7 +87,7 @@ public class Route : MonoBehaviour {
 
         // size is 80%
 
-        if (routeColor != RouteColor.Gray) {
+        if (routeColor != CardColor.Universal) {
             foreach (var placeholder in _placeholders) {
                 var renderer = placeholder.GetComponent<Renderer>();
                 renderer.material = ResourceLibrary._.ColorMaterials[routeColor.Value];

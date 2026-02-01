@@ -17,6 +17,9 @@ MonoBehaviour:
   WagonPlaceholderPrefab: {fileID: 7221452288196791348, guid: c66811ef3e858294190f4f4dfde12816, type: 3}
   CityVisualizerPrefab: {fileID: 951936228704540066, guid: cbd0be0032e774c4eaa2ba5e89d82897, type: 3}
   PlanePrefab: {fileID: 455046920375282191, guid: 46a5451dffc55174db868dacc64838de, type: 3}
+  WagonRigidbodyPrefab: {fileID: 1125216814804167065, guid: cdb7aee3716856b4daf3550bd4a4e6dd, type: 3}
+  WagonPrefab: {fileID: 3533538652519569050, guid: 6be85b6f9b803154e93a906d8277fe56, type: 3}
+  BezierSplinePrefab: {fileID: 3267991554334122505, guid: 2515f4c12189e1f4596df3ee57185a99, type: 3}
   defaultMaterial: {fileID: 2100000, guid: b917d920e187dff4caf573c9f3ac200e, type: 2}
   Red: {fileID: 2100000, guid: 02d52a86b0891344791a9d98a3368143, type: 2}
   Blue: {fileID: 2100000, guid: 78f565b5ad557b742b2340ec0e0cf584, type: 2}
@@ -26,3 +29,8 @@ MonoBehaviour:
   Pink: {fileID: 2100000, guid: 0d82c73a088196343acffb291bac3c38, type: 2}
   Black: {fileID: 2100000, guid: 6e37b0993f1130548ad4dd153bef5ce3, type: 2}
   White: {fileID: 2100000, guid: 2737de3b9de2e1c4e8aa4ed974da7b40, type: 2}
+  BlueWagon: {fileID: 2100000, guid: 1ce3094c6bee0154fbb7438d500dcc0b, type: 2}
+  RedWagon: {fileID: 2100000, guid: 32fb90b5bd750b448ba9efca960ad370, type: 2}
+  YellowWagon: {fileID: 2100000, guid: 254db5fc5bc5d8541bae9bff2e48c091, type: 2}
+  BlackWagon: {fileID: 2100000, guid: fd4efda44408ce94d9bed64f88210139, type: 2}
+  GreenWagon: {fileID: 2100000, guid: 8cf33de569834ea4f8028ca2ba884744, type: 2}

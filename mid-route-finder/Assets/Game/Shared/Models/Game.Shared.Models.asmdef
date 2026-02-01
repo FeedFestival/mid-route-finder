@@ -1,0 +1,4 @@
+{
+	"name": "Game.Shared.Models",
+	"references":[ "GUID:4fbf0f86a48056e47a509841a228febd", "GUID:f33f2b80f1b400c4681b48882e2c466c", "GUID:38ea48fc0fc6e394b922c1be00beef66" ]
+}
